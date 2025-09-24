@@ -29,4 +29,4 @@ void SYSCTL_SYSCLK_set(enum SYSCTL_SYSCLK_FREQ clk_freq);
 enum SYSCTL_SYSCLK_FREQ SYSCTL_SYSCLK_getMCLK(void);
 enum SYSCTL_SYSCLK_FREQ SYSCTL_SYSCLK_getULPCLK(void);
 
-#endif
+#endif // _SYSCTL_H_
