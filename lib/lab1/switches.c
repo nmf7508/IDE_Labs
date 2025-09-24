@@ -10,7 +10,7 @@
 */
 
 #include <ti\devices\msp\msp.h>
-#include "lab1\switches.h"
+#include "lab5\switches.h"
 
 /**
  * Reset and initialize power for switch 1 if not done already
@@ -79,4 +79,26 @@ int S1_pressed(void) {
 int S2_pressed(void) {
 	//If button is pressed 22nd bit of DIN31_0 will be set
 	return GPIOB->DIN31_0 & (1 << 21);
+}
+
+/**
+ * @brief Switch 1 interrupt initialization
+ * @note Use NVIC_EnableIRQ() to register IRQn with the NVIC
+ *       Check out `cmsis_armclang.h`
+ * @hint Keep the polarity in mind
+*/
+void S1_init_interrupt(void){
+	__disable_irq();
+	S1_init();
+}
+
+
+/**
+ * @brief Switch 2 interrupt initialization
+ * @note Use NVIC_EnableIRQ() to register IRQn with the NVIC
+ *       Check out `cmsis_armclang.h`
+*/
+void S2_init_interrupt(void){
+	__disable_irq();
+	S2_init();
 }
