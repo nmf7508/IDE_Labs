@@ -90,6 +90,11 @@ int S2_pressed(void) {
 void S1_init_interrupt(void){
 	__disable_irq();
 	S1_init();
+	GPIOA->CPU_INT.ICLR |= GPIO_GEN_EVENT1_ICLR_DIO18_CLR;
+	GPIOA->CPU_INT.IMASK |= GPIO_GEN_EVENT1_IMASK_DIO18_SET;
+	GPIOA->POLARITY31_16 |= GPIO_POLARITY31_16_DIO18_FALL;
+	NVIC_EnableIRQ(GPIOA_INT_IRQn);
+	__enable_irq();
 }
 
 
@@ -101,4 +106,9 @@ void S1_init_interrupt(void){
 void S2_init_interrupt(void){
 	__disable_irq();
 	S2_init();
+	GPIOB->CPU_INT.ICLR |= GPIO_GEN_EVENT1_ICLR_DIO18_CLR;
+	GPIOB->CPU_INT.IMASK |= GPIO_GEN_EVENT1_IMASK_DIO18_SET;
+	GPIOB->POLARITY31_16 |= GPIO_POLARITY31_16_DIO18_FALL;
+	NVIC_EnableIRQ(GPIOB_INT_IRQn);
+	__enable_irq();
 }

@@ -1,6 +1,6 @@
 #include "lab4/I2C/oled.h"
 #include "lab1/switches.h"
-/*
+
 int main() {
 	OLED_Init();
 	while(1) {
@@ -25,8 +25,8 @@ int main() {
 		OLED_display_clear();
 	}
 }
-*/
 
+/*
 int main() {
 	OLED_Init();
 	S1_init();
@@ -51,5 +51,4 @@ int main() {
 		while(!S1_pressed());
 	}
 }
-
-	
+*/
