@@ -488,6 +488,16 @@
               <FileType>5</FileType>
               <FilePath>..\..\lib\lab4\I2C\oled.h</FilePath>
             </File>
+            <File>
+              <FileName>isrs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\isrs.c</FilePath>
+            </File>
+            <File>
+              <FileName>isrs.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\isrs.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

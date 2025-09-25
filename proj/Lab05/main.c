@@ -2,6 +2,7 @@
 #include "lab5/switches.h"
 #include "lab5/timers.h"
 #include "lab1/leds.h"
+#include "isrs.h"
 
 int main() {
 	UART0_init();
@@ -9,10 +10,11 @@ int main() {
 	LED2_init();
 	S1_init_interrupt();
 	S2_init_interrupt();
-	TIMG6_init(0, 0);
-	TIMG12_init(0);
+	//TIMG6_init(0, 0);
+	//TIMG12_init(0);
 	
 	while(1) {
-		;
+		
 	}
 }
+
