@@ -16,3 +16,8 @@ void GROUP1_IRQHandler(void) {
 			break;
 	}
 }
+
+void TIMG0_IRQHandler(void) {
+	TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
+	LED1_set(LED1_TOGGLE);
+}

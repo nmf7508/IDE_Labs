@@ -10,7 +10,7 @@ int main() {
 	LED2_init();
 	S1_init_interrupt();
 	S2_init_interrupt();
-	//TIMG6_init(0, 0);
+	TIMG0_init(16000, 2000);
 	//TIMG12_init(0);
 	
 	while(1) {
