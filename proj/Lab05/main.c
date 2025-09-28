@@ -3,6 +3,7 @@
 #include "lab5/timers.h"
 #include "lab1/leds.h"
 #include "isrs.h"
+//#include <stdio.h>
 
 int main() {
 	UART0_init();
@@ -10,11 +11,11 @@ int main() {
 	LED2_init();
 	S1_init_interrupt();
 	S2_init_interrupt();
-	TIMG0_init(16000, 2000);
+	TIMG6_init(31250/4, 255);
+	TIMG12_init(32000000);
 	//TIMG12_init(0);
 	
 	while(1) {
-		
 	}
 }
 

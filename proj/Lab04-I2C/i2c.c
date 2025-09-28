@@ -1,3 +1,14 @@
+ /**
+ * ******************************************************************************
+ * @file    : i2c.c
+ * @brief   : I2C1 module operations
+ * @details : Provides I2C1 initialization and additional functions
+ * 
+ * @author Nick Fair
+ * @date 9/24/2025
+ * ******************************************************************************
+*/
+
 #include <ti/devices/msp/msp.h>
 #include "lab4/I2C/i2c.h"
 #include "sysctl.h"

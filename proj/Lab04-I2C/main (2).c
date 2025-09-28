@@ -1,13 +1,3 @@
- /**
- * ******************************************************************************
- * @file    : main.c
- * @brief   : main function for OLED display
- * @details : Uses OLED modules to display information to the display
- * 
- * @author Nick Fair
- * @date 9/24/2025
- * ******************************************************************************
-*/
 #include "lab4/I2C/oled.h"
 #include "lab1/switches.h"
 
