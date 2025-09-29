@@ -12,7 +12,7 @@ int main() {
 	S1_init_interrupt();
 	S2_init_interrupt();
 	TIMG6_init(31250/4, 255);
-	TIMG12_init(32000000);
+	TIMG12_init(32000);
 	//TIMG12_init(0);
 	
 	while(1) {
