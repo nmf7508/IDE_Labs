@@ -36,5 +36,8 @@ uint8_t Camera_isDataReady(void);
 */
 uint16_t* Camera_getData(void);
 
+void TIMG0_IRQHandler(void);
+void TIMG6_IRQHandler(void);
+
 
 #endif // _CAMERA_H_
