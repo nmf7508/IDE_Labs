@@ -8,7 +8,7 @@ static volatile uint8_t cameraData_complete = 0;
 static volatile int pixelCounter = 0;       // counts CLK edges (including dummy cycles)
 static uint32_t cameraData[128];            // store 128 pixels
 
-// PB12 (PINCM29) ? CLK
+// PB12 (PINCM29) CLK
 void init_CLK(void) {
     TIMG0_init(320, 0);   // Adjust divider for pixel clock speed (try ~100kHz first)
 
@@ -26,7 +26,7 @@ void init_CLK(void) {
 }
 
 
-// PB16 (PINCM33) ? SI
+// PB16 (PINCM33) SI
 void init_SI(void) {
     TIMG6_init(31250, 255);   // frame rate timer (sets integration time)
 
