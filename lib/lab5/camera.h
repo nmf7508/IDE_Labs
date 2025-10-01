@@ -38,6 +38,8 @@ uint16_t* Camera_getData(void);
 
 void TIMG0_IRQHandler(void);
 void TIMG6_IRQHandler(void);
+void init_CLK(void);
+void init_SI(void);
 
 
 #endif // _CAMERA_H_
