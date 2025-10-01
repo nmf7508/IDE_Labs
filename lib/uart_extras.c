@@ -12,7 +12,7 @@
 */
 
 #include "uart_extras.h"
-#include "uart.h"
+#include "lab4/uart.h"
 
 /**
  * @brief Prints integer value over UART0
@@ -39,7 +39,7 @@ void UART0_printDec(int num) {
         }
         if (neg) *(--StringPtr) = '-';
     }
-    UART0_put(StringPtr);
+    UART0_put((uint8_t *)StringPtr);
 }
 
 /**

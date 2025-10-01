@@ -2,6 +2,8 @@
 #include "lab1/leds.h"
 #include "isrs.h"
 #include "lab4/uart.h"
+#include "uart_extras.h"
+#include "lab5/adc12.h"
 #include <stdio.h>
 
 static int timerOn = 0;
@@ -44,6 +46,9 @@ void TIMG0_IRQHandler(void) {
 void TIMG6_IRQHandler(void) {
 	TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 	LED1_set(LED1_TOGGLE);
+	UART0_put((uint8_t *)"Sample: ");
+	UART0_printDec((int)ADC0_getVal());
+	UART0_put((uint8_t *)"\r\n");
 }
 
 void TIMG12_IRQHandler(void) {

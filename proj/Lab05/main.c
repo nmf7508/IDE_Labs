@@ -3,6 +3,7 @@
 #include "lab5/timers.h"
 #include "lab1/leds.h"
 #include "isrs.h"
+#include "lab5/adc12.h"
 //#include <stdio.h>
 
 int main() {
@@ -11,7 +12,8 @@ int main() {
 	LED2_init();
 	S1_init_interrupt();
 	S2_init_interrupt();
-	TIMG6_init(31250/4, 255);
+	ADC0_init();
+	TIMG6_init(31250, 255);
 	TIMG12_init(32000);
 	//TIMG12_init(0);
 	

@@ -498,6 +498,16 @@
               <FileType>5</FileType>
               <FilePath>.\isrs.h</FilePath>
             </File>
+            <File>
+              <FileName>uart_extras.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\lib\uart_extras.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_extras.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\lib\uart_extras.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
