@@ -1,4 +1,6 @@
 #include "/lab5/adc12.h"
+#include "uart_extras.h"
+#include "lab4/uart.h"
 #include <ti/devices/msp/msp.h>
 #include "sysctl.h"
 
@@ -25,6 +27,8 @@ void ADC0_init(void) {
     ADC0->ULLMEM.CTL0 |= ADC12_CTL0_PWRDN_MANUAL;       // disable power down
 		
 		ADC0->ULLMEM.MEMCTL[0] = ADC12_MEMCTL_CHANSEL_CHAN_0;
+		ADC0->ULLMEM.MEMCTL[0] = ADC12_MEMCTL_STIME_SEL_SCOMP0;
+		ADC0->ULLMEM.SCOMP0 = 128;
 		
 		ADC0->ULLMEM.CTL1 |= ADC12_CTL1_CONSEQ_SINGLE;
 		ADC0->ULLMEM.CTL2 |= ADC12_CTL2_STARTADD_ADDR_00;
@@ -47,7 +51,6 @@ uint32_t ADC0_getVal(void) {
     while (!(ADC0->ULLMEM.STATUS & ADC12_STATUS_BUSY_ACTIVE)) {
         __asm("nop");
     }
-
     // Read result
     return (uint32_t)(ADC0->ULLMEM.MEMRES[0] & 0x0FFF);
 }

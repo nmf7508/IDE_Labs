@@ -45,9 +45,10 @@ void TIMG0_IRQHandler(void) {
 
 void TIMG6_IRQHandler(void) {
 	TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-	LED1_set(LED1_TOGGLE);
+	//LED1_set(LED1_TOGGLE);
+	int val = (int) ADC0_getVal();
 	UART0_put((uint8_t *)"Sample: ");
-	UART0_printDec((int)ADC0_getVal());
+	UART0_printDec(val);
 	UART0_put((uint8_t *)"\r\n");
 }
 
