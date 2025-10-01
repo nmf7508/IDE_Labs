@@ -6,6 +6,8 @@
 #include "lab5/adc12.h"
 #include <stdio.h>
 
+#define MODE 2
+
 static int timerOn = 0;
 static long int timeElapsed = 0;
 
@@ -45,11 +47,23 @@ void TIMG0_IRQHandler(void) {
 
 void TIMG6_IRQHandler(void) {
 	TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-	//LED1_set(LED1_TOGGLE);
+#if MODE == 0
+	LED1_set(LED1_TOGGLE);
+#elif MODE == 1
 	int val = (int) ADC0_getVal();
 	UART0_put((uint8_t *)"Sample: ");
 	UART0_printDec(val);
 	UART0_put((uint8_t *)"\r\n");
+#else
+	int val = (int) ADC0_getVal();
+	double tempC = ((((double) val * (double) 3.3)/(double) 4095) - (double) 0.5) * (double) 100;
+	UART0_put((uint8_t *) "Temp in C: ");
+	UART0_printFloat(tempC);
+	UART0_put((uint8_t *) ", in F: ");
+	UART0_printFloat(tempC * 9.0 / 5.0 + 32.0);
+	UART0_put((uint8_t *) "\r\n");
+#endif
+	
 }
 
 void TIMG12_IRQHandler(void) {
