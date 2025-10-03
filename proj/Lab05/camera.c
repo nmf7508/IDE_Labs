@@ -23,12 +23,15 @@ void init_CLK(void) {
     IOMUX->SECCFG.PINCM[IOMUX_PINCM34] |= (0x80 | 0x01);
     IOMUX->SECCFG.PINCM[IOMUX_PINCM34] &= ~IOMUX_PINCM_INENA_ENABLE;
     IOMUX->SECCFG.PINCM[IOMUX_PINCM34] |= IOMUX_PINCM_INV_ENABLE;
+		
+		TIMG0->COUNTERREGS.CTRCTL ^= GPTIMER_CTRCTL_EN_ENABLED;
+		
 }
 
 
 // PA28 (PINCM3) SI
 void init_SI(void) {
-    TIMG6_init(31250, 255);   // sets integration time
+    TIMG6_init(31250/4, 255);   // sets integration time
 
     if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
         GPIOA->GPRCM.RSTCTL = GPIO_RSTCTL_KEY_UNLOCK_W | GPIO_RSTCTL_RESETASSERT_ASSERT;
@@ -40,6 +43,9 @@ void init_SI(void) {
     IOMUX->SECCFG.PINCM[IOMUX_PINCM3] |= (0x80 | 0x01);
     IOMUX->SECCFG.PINCM[IOMUX_PINCM3] &= ~IOMUX_PINCM_INENA_ENABLE;
     IOMUX->SECCFG.PINCM[IOMUX_PINCM3] |= IOMUX_PINCM_INV_ENABLE;
+		
+		TIMG6->COUNTERREGS.CTRCTL ^= GPTIMER_CTRCTL_EN_ENABLED;
+		
 }
 
 /**
@@ -51,6 +57,8 @@ void Camera_init(void) {
     init_SI();
     cameraData_complete = 0;
     pixelCounter = 0;
+	
+		GPIOA->DOUTSET31_0 = (1 << 16);
 
     // Make sure CLK is disabled until SI starts a frame
     TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;
@@ -86,8 +94,8 @@ void TIMG6_IRQHandler(void) {
 
     if (!cameraData_complete) {
         // Pulse SI high then low
-        GPIOB->DOUTSET31_0 = (1 << 16);
-        GPIOB->DOUTCLR31_0 = (1 << 16);
+        GPIOA->DOUTSET31_0 = (1 << 16);
+        GPIOA->DOUTCLR31_0 = (1 << 16);
 
         // Reset counters and start CLK
         pixelCounter = 0;

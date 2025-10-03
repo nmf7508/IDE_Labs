@@ -9,6 +9,7 @@
 //#include <stdio.h>
 
 int main() {
+	/**
 	UART0_init();
 	LED1_init();
 	LED2_init();
@@ -18,9 +19,9 @@ int main() {
 	TIMG6_init(31250, 255);
 	TIMG12_init(32000);
 	//TIMG12_init(0);
+	**/
 	
-	/**
-	Part 3 Code (maybe)
+	//Part 3 Code (maybe)
 	// Initialize peripherals
 	UART0_init();          // UART for data streaming
 	LED1_init();           // Debug LEDs
@@ -47,7 +48,6 @@ int main() {
 					UART0_put((uint8_t*)"\r\n");
 			}
 	}
-	**/
 }
 
 
