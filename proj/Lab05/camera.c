@@ -3,6 +3,7 @@
 #include "sysctl.h"
 #include "lab5/timers.h"
 #include "lab5/adc12.h"
+#include "lab4/uart.h"
 
 static volatile uint8_t cameraData_complete = 0;
 static volatile int pixelCounter = 0;       // counts CLK edges (including dummy cycles)
@@ -22,10 +23,10 @@ void init_CLK(void) {
 
     IOMUX->SECCFG.PINCM[IOMUX_PINCM34] |= (0x80 | 0x01);
     IOMUX->SECCFG.PINCM[IOMUX_PINCM34] &= ~IOMUX_PINCM_INENA_ENABLE;
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM34] |= IOMUX_PINCM_INV_ENABLE;
+    //IOMUX->SECCFG.PINCM[IOMUX_PINCM34] |= IOMUX_PINCM_INV_ENABLE;
 		
-		TIMG0->COUNTERREGS.CTRCTL ^= GPTIMER_CTRCTL_EN_ENABLED;
-		
+		//TIMG0->COUNTERREGS.CTRCTL ^= GPTIMER_CTRCTL_EN_ENABLED;
+		GPIOA->DOESET31_0 |= (1 << 12);
 }
 
 
@@ -42,10 +43,10 @@ void init_SI(void) {
 
     IOMUX->SECCFG.PINCM[IOMUX_PINCM3] |= (0x80 | 0x01);
     IOMUX->SECCFG.PINCM[IOMUX_PINCM3] &= ~IOMUX_PINCM_INENA_ENABLE;
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM3] |= IOMUX_PINCM_INV_ENABLE;
+    //IOMUX->SECCFG.PINCM[IOMUX_PINCM3] |= IOMUX_PINCM_INV_ENABLE;
 		
-		TIMG6->COUNTERREGS.CTRCTL ^= GPTIMER_CTRCTL_EN_ENABLED;
-		
+		TIMG6->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+		GPIOA->DOESET31_0 |= (1 << 28);
 }
 
 /**
@@ -57,9 +58,6 @@ void Camera_init(void) {
     init_SI();
     cameraData_complete = 0;
     pixelCounter = 0;
-	
-		GPIOA->DOUTSET31_0 = (1 << 16);
-
     // Make sure CLK is disabled until SI starts a frame
     TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;
 }
@@ -68,10 +66,13 @@ void Camera_init(void) {
  * CLK ISR (TIMG0) — shifts pixels out of the camera
  */
 void TIMG0_IRQHandler(void) {
+		UART0_put("IN TIMG0\r\n");
     TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-
+		GPIOA->DOUTTGL31_0 |= (1 << 12);
+	  if (pixelCounter == 1) {
+			GPIOA->DOUTCLR31_0 |= (1 << 28);
+		}
     pixelCounter++;
-
     // Skip first 18 dummy cycles, then read 128 pixels
     if (pixelCounter > 18 && pixelCounter <= (18 + 128)) {
         int idx = pixelCounter - 19;
@@ -90,12 +91,13 @@ void TIMG0_IRQHandler(void) {
  * SI ISR (TIMG6) — pulses SI and starts a new frame
  */
 void TIMG6_IRQHandler(void) {
+		UART0_put("IN TIMG6\r\n");
     TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 
     if (!cameraData_complete) {
         // Pulse SI high then low
-        GPIOA->DOUTSET31_0 = (1 << 16);
-        GPIOA->DOUTCLR31_0 = (1 << 16);
+        GPIOA->DOUTSET31_0 = (1 << 28);
+        //GPIOA->DOUTCLR31_0 = (1 << 28);
 
         // Reset counters and start CLK
         pixelCounter = 0;
