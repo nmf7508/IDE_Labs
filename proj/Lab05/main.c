@@ -4,6 +4,8 @@
 #include "lab1/leds.h"
 #include "isrs.h"
 #include "lab5/adc12.h"
+#include "uart_extras.h"
+#include "lab5/camera.h"
 //#include <stdio.h>
 
 int main() {
@@ -17,7 +19,35 @@ int main() {
 	TIMG12_init(32000);
 	//TIMG12_init(0);
 	
-	while(1) {
+	/**
+	Part 3 Code (maybe)
+	// Initialize peripherals
+	UART0_init();          // UART for data streaming
+	LED1_init();           // Debug LEDs
+	LED2_init();
+	Camera_init();         // ADC + SI/CLK timers
+
+	UART0_put((uint8_t*)"\r\nLab 5 - Camera Test Start\r\n");
+
+	while (1) {
+			// Wait for camera
+			if (Camera_isDataReady()) {
+					uint16_t* data = Camera_getData();
+
+					// Indicate capture complete (toggle LED1)
+					LED1_set(LED1_TOGGLE);
+
+					// Stream pixel data over UART as CSV
+					for (int i = 0; i < 128; i++) {
+							UART0_printDec(data[i]);    // raw ADC value (0–4095)
+							if (i < 127) {
+									UART0_putchar(',');    // comma between values
+							}
+					}
+					UART0_put((uint8_t*)"\r\n");
+			}
 	}
+	**/
 }
+
 
