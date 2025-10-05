@@ -50,7 +50,7 @@ end % plot_cameras_serial
 %*****************************************************************************************************************
 function trace = readData(trace)
     % Initialize Serial Object
-    serialPort = "COM9";
+    serialPort = "COM4";
     serialBaudrate = 9600;
     camera = serialport(serialPort, serialBaudrate);
     camera.FlowControl = "software";
@@ -59,16 +59,16 @@ function trace = readData(trace)
 
     % Read data from serial object for trace
     while(true)
-        % disp("Searching for start..");
+        disp("Searching for start..");
         val = readline(camera);
         if (strcmp(val, "-1") == 0) % if not the start
-            % disp(val); % words, not numbers
+            disp(val); % words, not numbers
             continue;
         end
-        % disp("FOUND START!");
+        disp("FOUND START!");
         while (true)
             val = str2double(readline(camera));
-            % disp(val);
+            disp(val);
             if (val == -2)
                 break;
             else
@@ -100,7 +100,9 @@ end
 
 function plotdata(trace, smoothtrace, bintrace, plt, ax1, ax2, ax3)
     % TODO: Plot data
-    %   plot(ax, trace)
+    plot(ax1, trace)
+    plot(ax2, smoothtrace)
+    plot(ax3, bintrace)
 
     refreshdata
     drawnow

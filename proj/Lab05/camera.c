@@ -32,7 +32,7 @@ void init_CLK(void) {
 
 // PA28 (PINCM3) SI
 void init_SI(void) {
-    TIMG6_init(31250/4, 255);   // sets integration time
+    TIMG6_init(100, 255);   // sets integration time
 
     if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
         GPIOA->GPRCM.RSTCTL = GPIO_RSTCTL_KEY_UNLOCK_W | GPIO_RSTCTL_RESETASSERT_ASSERT;
@@ -66,7 +66,7 @@ void Camera_init(void) {
  * CLK ISR (TIMG0) — shifts pixels out of the camera
  */
 void TIMG0_IRQHandler(void) {
-		UART0_put("IN TIMG0\r\n");
+		//UART0_put("IN TIMG0\r\n");
     TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 		GPIOA->DOUTTGL31_0 |= (1 << 12);
 	  if (pixelCounter == 1) {
@@ -74,9 +74,12 @@ void TIMG0_IRQHandler(void) {
 		}
     pixelCounter++;
     // Skip first 18 dummy cycles, then read 128 pixels
-    if (pixelCounter > 18 && pixelCounter <= (18 + 128)) {
-        int idx = pixelCounter - 19;
-        cameraData[idx] = ADC0_getVal();
+    if (pixelCounter > 18) {
+				if (pixelCounter <= (18 + 128)) {
+					int idx = pixelCounter - 19;
+					cameraData[idx] = ADC0_getVal();
+				}
+				
     }
 
     // Done capturing a full line
@@ -91,7 +94,7 @@ void TIMG0_IRQHandler(void) {
  * SI ISR (TIMG6) — pulses SI and starts a new frame
  */
 void TIMG6_IRQHandler(void) {
-		UART0_put("IN TIMG6\r\n");
+		//UART0_put("IN TIMG6\r\n");
     TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 
     if (!cameraData_complete) {

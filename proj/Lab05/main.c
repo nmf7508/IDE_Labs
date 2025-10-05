@@ -28,11 +28,12 @@ int main() {
 	LED2_init();
 	Camera_init();         // ADC + SI/CLK timers
 
-	UART0_put((uint8_t*)"\r\nLab 5 - Camera Test Start\r\n");
+	//UART0_put((uint8_t*)"\r\nLab 5 - Camera Test Start\r\n");
 
 	while (1) {
 			// Wait for camera
 			if (Camera_isDataReady()) {
+					UART0_put((uint8_t*)"-1\r\n");
 					uint16_t* data = Camera_getData();
 
 					// Indicate capture complete (toggle LED1)
@@ -41,11 +42,12 @@ int main() {
 					// Stream pixel data over UART as CSV
 					for (int i = 0; i < 128; i++) {
 							UART0_printDec(data[i]);    // raw ADC value (0–4095)
+							UART0_put((uint8_t*)"\r\n");
 							if (i < 127) {
-									UART0_putchar(',');    // comma between values
+									//UART0_putchar(',');    // comma between values
 							}
 					}
-					UART0_put((uint8_t*)"\r\n");
+					UART0_put((uint8_t*)"-2\r\n");
 			}
 	}
 }
