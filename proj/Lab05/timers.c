@@ -29,6 +29,8 @@ void TIMG0_init(uint32_t period, uint32_t prescaler){
 	TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_CVAE_LDVAL;
 	//Set timer to repeat on a zero event
 	TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_REPEAT_REPEAT_1;
+	//Set clock div to 8
+	//TIMG0->CLKDIV |= GPTIMER_CLKDIV_RATIO_DIV_BY_8;
 	//Set prescaler value to the inputted prescaler variable
 	TIMG0->COMMONREGS.CPS = prescaler;
 	//Set load value to the inputted period variable

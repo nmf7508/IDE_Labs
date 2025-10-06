@@ -86,8 +86,8 @@ end
 % TODO: Complete the functions below
 
 function data = smoothData(data)
-    % TODO: 5-point Averager
-    %   For loop or movmean()
+    windowSize = 5;
+    data = movmean(data, windowSize);  % Built-in moving average
 
 end
 
@@ -102,7 +102,7 @@ function plotdata(trace, smoothtrace, bintrace, plt, ax1, ax2, ax3)
     % TODO: Plot data
     plot(ax1, trace)
     plot(ax2, smoothtrace)
-    plot(ax3, bintrace)
+    %plot(ax3, bintrace)
 
     refreshdata
     drawnow

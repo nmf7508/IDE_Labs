@@ -7,7 +7,7 @@
 
 static volatile uint8_t cameraData_complete = 0;
 static volatile int pixelCounter = 0;       // counts CLK edges (including dummy cycles)
-static uint32_t cameraData[128];            // store 128 pixels
+static uint16_t cameraData[128];            // store 128 pixels
 static bool read;
 
 // PA12 (PINCM34) CLK
@@ -79,7 +79,7 @@ void TIMG0_IRQHandler(void) {
     if (pixelCounter > 18) {
 				if (pixelCounter <= (18 + 128)) {
 					int idx = pixelCounter - 19;
-					cameraData[idx] = ADC0_getVal();
+					cameraData[idx] = (uint16_t)ADC0_getVal();
 				}
 				
     }

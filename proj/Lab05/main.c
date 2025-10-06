@@ -41,11 +41,8 @@ int main() {
 
 					// Stream pixel data over UART as CSV
 					for (int i = 0; i < 128; i++) {
-							UART0_printDec(data[i]);    // raw ADC value (0–4095)
-							UART0_put((uint8_t*)"\r\n");
-							if (i < 127) {
-									//UART0_putchar(',');    // comma between values
-							}
+						UART0_printDec(data[i]);    // raw ADC value (0–4095)
+						UART0_put((uint8_t*)"\r\n");
 					}
 					UART0_put((uint8_t*)"-2\r\n");
 			}
