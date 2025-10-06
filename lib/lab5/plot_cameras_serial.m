@@ -94,6 +94,8 @@ end
 function data = edgeData(data)
     for i = 1:128
         % TODO: Edge detection (binary 0 or 1)
+        data(i) = data(i) > 0; % Simple binary edge detection
+        data(i) = double(data(i) > 0); % Convert to binary (0 or 1)
 
     end
 end
@@ -102,7 +104,7 @@ function plotdata(trace, smoothtrace, bintrace, plt, ax1, ax2, ax3)
     % TODO: Plot data
     plot(ax1, trace)
     plot(ax2, smoothtrace)
-    %plot(ax3, bintrace)
+    plot(ax3, bintrace)
 
     refreshdata
     drawnow
