@@ -8,6 +8,7 @@
 static volatile uint8_t cameraData_complete = 0;
 static volatile int pixelCounter = 0;       // counts CLK edges (including dummy cycles)
 static uint32_t cameraData[128];            // store 128 pixels
+static bool read;
 
 // PA12 (PINCM34) CLK
 void init_CLK(void) {
@@ -72,6 +73,7 @@ void TIMG0_IRQHandler(void) {
 	  if (pixelCounter == 1) {
 			GPIOA->DOUTCLR31_0 |= (1 << 28);
 		}
+		if (read) {
     pixelCounter++;
     // Skip first 18 dummy cycles, then read 128 pixels
     if (pixelCounter > 18) {
@@ -88,6 +90,8 @@ void TIMG0_IRQHandler(void) {
         pixelCounter = 0;
         TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;  // stop CLK until next SI
     }
+	}
+		read = !read;
 }
 
 /**
@@ -106,6 +110,7 @@ void TIMG6_IRQHandler(void) {
         pixelCounter = 0;
         TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
     }
+		read = 1;
 }
 
 uint8_t Camera_isDataReady(void) {
