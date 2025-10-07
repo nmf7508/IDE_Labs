@@ -1142,18 +1142,18 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-       128         16          0          0          0       4055   adc12.o
-       260         52          0          0          5       4524   isrs.o
-       320         28          0          0          0       5596   leds.o
-        48          4          0          0          0        372   main.o
-        48         22        192          0       1024        816   startup_mspm0g350x_uvision.o
-       280         40          0          0          0       6920   switches.o
-        32          8          0          4          0       4022   sysctl.o
-       288         44          0          0          0       5431   timers.o
-       280         40          0          0          0       5448   uart.o
+       128         16          0          0          0       4031   adc12.o
+       260         52          0          0          5       4500   isrs.o
+       320         28          0          0          0       5572   leds.o
+        48          4          0          0          0        349   main.o
+        48         22        192          0       1024        792   startup_mspm0g350x_uvision.o
+       280         40          0          0          0       6895   switches.o
+        32          8          0          4          0       3998   sysctl.o
+       288         44          0          0          0       5406   timers.o
+       280         40          0          0          0       5424   uart.o
 
     ----------------------------------------------------------------------
-      1684        254        224          4       1036      37184   Object Totals
+      1684        254        224          4       1036      36967   Object Totals
          0          0         32          0          0          0   (incl. Generated)
          0          0          0          0          7          0   (incl. Padding)
 
@@ -1220,8 +1220,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-      5790        378        354          4       1132      38132   Grand Totals
-      5790        378        354          4       1132      38132   ELF Image Totals
+      5790        378        354          4       1132      37915   Grand Totals
+      5790        378        354          4       1132      37915   ELF Image Totals
       5790        378        354          4          0          0   ROM Totals
 
 ==============================================================================
