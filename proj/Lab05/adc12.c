@@ -63,8 +63,6 @@ void ADC0_init(void) {
     ADC0->ULLMEM.CTL1 |= ADC12_CTL1_TRIGSRC_SOFTWARE;      // Software-triggered conversion
     ADC0->ULLMEM.CTL1 |= ADC12_CTL1_SAMPMODE_AUTO;         // Automatic sampling mode
 
-    // Optional: Event mode register (not available on some variants)
-    // ADC0->ULLMEM.EVT_MODE |= ADC12_EVT_MODE_INT0_CFG_SOFTWARE;
 }
 
 /**
