@@ -9,23 +9,20 @@
 //#include <stdio.h>
 
 int main() {
-	/**
 	UART0_init();
 	LED1_init();
 	LED2_init();
 	S1_init_interrupt();
 	S2_init_interrupt();
 	ADC0_init();
-	TIMG6_init(31250, 255);
-	TIMG12_init(32000);
-	//TIMG12_init(0);
-	**/
-	
-	//Part 3 Code (maybe)
-	// Initialize peripherals
-	UART0_init();          // UART for data streaming
-	LED1_init();           // Debug LEDs
-	LED2_init();
+#if MODE == 0
+	TIMG6_init(31250, 255); //2Hz freq for LED1
+	TIMG12_init(32000);     //1kHz freq to track ms
+	while (1) {}
+#elif MODE == 1 || MODE == 2
+	TIMG6_init(31250, 255); //period for ADC reads
+	while (1) {}
+#elif MODE == 3
 	Camera_init();         // ADC + SI/CLK timers
 
 	//UART0_put((uint8_t*)"\r\nLab 5 - Camera Test Start\r\n");
@@ -47,6 +44,7 @@ int main() {
 					UART0_put((uint8_t*)"-2\r\n");
 			}
 	}
+#endif
 }
 
 

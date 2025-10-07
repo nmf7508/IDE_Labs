@@ -4,11 +4,8 @@
 #include "lab5/timers.h"
 #include "lab5/adc12.h"
 #include "lab4/uart.h"
+#include "isrs.h"
 
-static volatile uint8_t cameraData_complete = 0;
-static volatile int pixelCounter = 0;       // counts CLK edges (including dummy cycles)
-static uint16_t cameraData[128];            // store 128 pixels
-static bool read;
 
 // PA12 (PINCM34) CLK
 void init_CLK(void) {
@@ -54,63 +51,12 @@ void init_SI(void) {
  * @brief Initialize camera associated components
 */
 void Camera_init(void) {
-    ADC0_init();
     init_CLK();
     init_SI();
     cameraData_complete = 0;
     pixelCounter = 0;
     // Make sure CLK is disabled until SI starts a frame
     TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;
-}
-
-/**
- * CLK ISR (TIMG0) — shifts pixels out of the camera
- */
-void TIMG0_IRQHandler(void) {
-		//UART0_put("IN TIMG0\r\n");
-    TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-		GPIOA->DOUTTGL31_0 |= (1 << 12);
-	  if (pixelCounter == 1) {
-			GPIOA->DOUTCLR31_0 |= (1 << 28);
-		}
-		if (read) {
-    pixelCounter++;
-    // Skip first 18 dummy cycles, then read 128 pixels
-    if (pixelCounter > 18) {
-				if (pixelCounter <= (18 + 128)) {
-					int idx = pixelCounter - 19;
-					cameraData[idx] = (uint16_t)ADC0_getVal();
-				}
-				
-    }
-
-    // Done capturing a full line
-    if (pixelCounter >= (18 + 128)) {
-        cameraData_complete = 1;
-        pixelCounter = 0;
-        TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;  // stop CLK until next SI
-    }
-	}
-		read = !read;
-}
-
-/**
- * SI ISR (TIMG6) — pulses SI and starts a new frame
- */
-void TIMG6_IRQHandler(void) {
-		//UART0_put("IN TIMG6\r\n");
-    TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-
-    if (!cameraData_complete) {
-        // Pulse SI high then low
-        GPIOA->DOUTSET31_0 = (1 << 28);
-        //GPIOA->DOUTCLR31_0 = (1 << 28);
-
-        // Reset counters and start CLK
-        pixelCounter = 0;
-        TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
-    }
-		read = 1;
 }
 
 uint8_t Camera_isDataReady(void) {

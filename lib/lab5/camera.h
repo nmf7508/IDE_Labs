@@ -16,6 +16,10 @@
 
 #include <stdint.h>
 
+extern volatile uint8_t cameraData_complete;
+extern volatile int pixelCounter;       // counts CLK edges (including dummy cycles)
+extern uint16_t cameraData[128];            // store 128 pixels
+
 /**
  * @brief Initialize camera associated components
 */
@@ -36,8 +40,8 @@ uint8_t Camera_isDataReady(void);
 */
 uint16_t* Camera_getData(void);
 
-void TIMG0_IRQHandler(void);
-void TIMG6_IRQHandler(void);
+//void TIMG0_IRQHandler(void);
+//void TIMG6_IRQHandler(void);
 void init_CLK(void);
 void init_SI(void);
 
