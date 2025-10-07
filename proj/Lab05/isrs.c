@@ -8,10 +8,10 @@
  *   The specific functionality of each handler depends on the current operation 
  *   mode defined by the `MODE` macro:
  *   
- *   - **MODE 0:** Stopwatch/timing demonstration using timers and UART output.
- *   - **MODE 1:** Periodic ADC sampling with UART transmission.
- *   - **MODE 2:** Temperature sensor data acquisition and temperature conversion.
- *   - **MODE 3:** Camera line capture sequence using ADC sampling synchronized 
+ *   - MODE 0: Stopwatch/timing demonstration using timers and UART output.
+ *   - MODE 1: Periodic ADC sampling with UART transmission.
+ *   - MODE 2: Temperature sensor data acquisition and temperature conversion.
+ *   - MODE 3: Camera line capture sequence using ADC sampling synchronized 
  *                with timer-driven CLK and SI signals.
  *   
  *   Each interrupt routine manages clearing interrupt flags, handling GPIO toggles, 
@@ -144,10 +144,10 @@ void TIMG0_IRQHandler(void) {
  * @brief Timer6 interrupt handler.
  * @details 
  *   Behavior depends on MODE:
- *   - **MODE 0:** Toggles LED1 to indicate periodic timer events.
- *   - **MODE 1:** Samples ADC and sends raw ADC values via UART.
- *   - **MODE 2:** Reads ADC temperature sensor and converts voltage to °C and °F.
- *   - **MODE 3:** Generates camera "Start Integration" (SI) pulses and enables CLK timer.
+ *   - MODE 0: Toggles LED1 to indicate periodic timer events.
+ *   - MODE 1: Samples ADC and sends raw ADC values via UART.
+ *   - MODE 2: Reads ADC temperature sensor and converts voltage to °C and °F.
+ *   - MODE 3: Generates camera "Start Integration" (SI) pulses and enables CLK timer.
  */
 void TIMG6_IRQHandler(void) {
 	TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;

@@ -5,6 +5,12 @@
  * This file initializes the ADC0 module on the MSP microcontroller,
  * sets up its clock, sampling mode, and input channel configuration,
  * and provides a function to perform and retrieve a single conversion result.
+ *
+ * @authors 
+ *   Nick Fair  
+ *   Nathan Winiarski
+ * 
+ * @date   10/07/2025
  */
 
 #include "/lab5/adc12.h"

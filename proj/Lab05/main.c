@@ -1,22 +1,16 @@
 /**
  * ******************************************************************************
  * @file    : main.c
- * @brief   : Main Application Entry for Lab 5 – Multi-Mode Data Acquisition
- * @details :
- *   This program initializes and manages various system configurations for 
- *   the MSP microcontroller based on the selected operating mode (`MODE` macro).
- *   Each mode demonstrates different hardware functionalities including timers, 
- *   LEDs, ADC sampling, UART communication, and camera interfacing.
- * 
- *   **Operating Modes:**
- *   - **MODE 0 – Stopwatch / Timer Demo:**
+ * @brief   : Lab 5
+ *   Modes:
+ *   - MODE 0 – Stopwatch / Timer Demo:
  *       - Uses timers to simulate a stopwatch with LED indicators.
  *       - External switch interrupts start/stop timing, UART displays elapsed time.
- *   - **MODE 1 – ADC Sampling Demo:**
+ *   - MODE 1 – ADC Sampling Demo:
  *       - Samples analog input periodically and transmits raw ADC readings via UART.
- *   - **MODE 2 – Temperature Sensor Demo:**
+ *   - MODE 2 – Temperature Sensor Demo:
  *       - Converts ADC voltage readings into temperature values in °C and °F and sends them to UART.
- *   - **MODE 3 – Camera Capture:**
+ *   - MODE 3 – Camera Capture:
  *       - Interfaces with a line-scan camera.
  *       - Uses timers for SI (Start Integration) and CLK (pixel clock) control.
  *       - Collects 128 ADC samples per frame line and transmits pixel data through UART.
@@ -42,18 +36,11 @@
 #include "lab5/camera.h"
 
 
-/**
- * @brief Program entry point.
- * @details
- *   Initializes all necessary peripherals (UART, LEDs, switches, ADC, and timers) 
- *   based on the selected mode. Operation is mostly interrupt-driven, so each mode 
- *   runs an infinite loop that waits for interrupts or data flags to trigger actions.
- */
 int main() {
     // Initialize communication and hardware peripherals
     UART0_init();           // UART for debugging and data transmission
-    LED1_init();            // Status indicator LED1
-    LED2_init();            // Status indicator LED2
+    LED1_init();            // Initialize LED1
+    LED2_init();            // Initialize LED2
     S1_init_interrupt();    // Configure Switch 1 (S1) with interrupt capability
     S2_init_interrupt();    // Configure Switch 2 (S2) with interrupt capability
     ADC0_init();            // Initialize ADC for data acquisition

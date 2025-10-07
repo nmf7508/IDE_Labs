@@ -7,8 +7,8 @@
  *   line-scan camera system using the MSP microcontroller. The system uses 
  *   two GPIO outputs to generate timing signals:
  *   
- *   - **CLK (PA12)**: Provides the pixel clock that triggers ADC sampling for each pixel.
- *   - **SI (PA28)**: Acts as the "Start Integration" signal, beginning a new image capture.
+ *   - CLK (PA12): Provides the pixel clock that triggers ADC sampling for each pixel.
+ *   - SI (PA28): Acts as the "Start Integration" signal, beginning a new image capture.
  *   
  *   Two general-purpose timers (TIMG0 and TIMG6) are configured to generate 
  *   these signals. The ADC12 peripheral is used to sample pixel data in sync 
@@ -37,12 +37,12 @@
 /**
  * @brief Initialize the pixel clock (CLK) output on PA12.
  * @details
- *   Configures **TIMG0** to generate the CLK signal that controls pixel timing 
+ *   Configures TIMG0 to generate the CLK signal that controls pixel timing 
  *   for the camera. The clock frequency determines how fast pixels are sampled.
  *   The corresponding GPIO pin (PA12 / PINCM34) is configured as an output.
  *
- *   - **TIMG0**: Acts as the clock source (~100 kHz typical)
- *   - **PA12**: CLK output pin
+ *   - TIMG0: Acts as the clock source (~100 kHz typical)
+ *   - PA12: CLK output pin
  */
 void init_CLK(void) {
     // Initialize Timer0 with period and prescaler values for ~100 kHz pixel clock
@@ -68,12 +68,12 @@ void init_CLK(void) {
 /**
  * @brief Initialize the Start Integration (SI) signal on PA28.
  * @details
- *   Configures **TIMG6** to control integration timing — the time between 
+ *   Configures TIMG6 to control integration timing — the time between 
  *   successive image captures. Each SI pulse begins a new line capture by 
  *   resetting the pixel counter and enabling the CLK signal.
  *
- *   - **TIMG6**: Controls integration period (frame timing)
- *   - **PA28**: SI output pin
+ *   - TIMG6: Controls integration period (frame timing)
+ *   - PA28: SI output pin
  */
 void init_SI(void) {
     // Initialize Timer6 with a period and duty cycle for integration timing

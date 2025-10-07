@@ -5,6 +5,12 @@
  * This file configures and enables Timer G0, G6, and G12 peripherals on the MSP microcontroller.
  * Each function powers up the timer, sets its clock source, mode, prescaler, and interrupt configuration.
  * These timers are used for timing, delays, periodic interrupts, and peripheral control (e.g., ADC sampling).
+ *
+ * @authors 
+ *   Nick Fair  
+ *   Nathan Winiarski
+ * 
+ * @date   10/07/2025
  */
 
 #include "lab5/timers.h"

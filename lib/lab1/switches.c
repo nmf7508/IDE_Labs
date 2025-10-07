@@ -1,4 +1,3 @@
-```c
 /**
  * ******************************************************************************
  * @file    : switches.c
@@ -140,4 +139,3 @@ void S2_init_interrupt(void) {
 
     __enable_irq();   // Re-enable global interrupts
 }
-```
