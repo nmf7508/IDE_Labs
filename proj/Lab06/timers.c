@@ -181,7 +181,7 @@ void TIMG12_init(uint32_t period) {
 
 // Channel 0 - PB8, Channel 1 - PB12, Channel 2 - PB17, Channel 3 - PB13
 void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double percentDutyCycle) {
-	// Ensure TIMG6 is powered and reset properly
+	// Ensure TIMA0 is powered and reset properly
     if (!(TIMA0->GPRCM.PWREN & GPTIMER_PWREN_ENABLE_ENABLE)) {
         // Reset the module
         TIMA0->GPRCM.RSTCTL = GPTIMER_RSTCTL_KEY_UNLOCK_W | GPTIMER_RSTCTL_RESETASSERT_ASSERT;
@@ -222,36 +222,64 @@ void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 		}
 		
 		if (pin == 0){
-    // Configure PB8 as output (no input, no inversion)
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM25] |= (0x80 | 0x01);
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM25] &= ~IOMUX_PINCM_INENA_ENABLE;
-    // Enable TimerA6 (starts integration timing)
-    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
-    GPIOB->DOESET31_0 |= (1 << 8);
-		}
+			// Configure PB8 as output (no input, no inversion)
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM25] |= IOMUX_PINCM25_PF_TIMA0_CCP0 | IOMUX_PINCM_PC_CONNECTED;
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM25] &= ~IOMUX_PINCM_INENA_ENABLE;
+			GPIOB->DOESET31_0 |= (1 << 8);
+			
+			TIMA0->COUNTERREGS.CC_01[0] = (uint32_t)((double)period * (1-percentDutyCycle));
+			TIMA0->COUNTERREGS.CCCTL_01[0] = 0;
+			TIMA0->COMMONREGS.CCPD |= 1;
+			TIMA0->COUNTERREGS.CCACT_01[0] = GPTIMER_CCACT_01_LACT_CCP_HIGH | GPTIMER_CCACT_01_CDACT_CCP_LOW;
+			TIMA0->COUNTERREGS.OCTL_01[0] = 0;
+
+			// Enable TimerA0 Channel 0 (starts integration timing)
+			TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+			}
 		else if (pin == 1){
-		// Configure PB12 as output (no input, no inversion)
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM29] |= (0x80 | 0x01);
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM29] &= ~IOMUX_PINCM_INENA_ENABLE;
-    // Enable TimerA6 (starts integration timing)
-    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
-    GPIOB->DOESET31_0 |= (1 << 12);
+			// Configure PB12 as output (no input, no inversion)
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM29] |= (IOMUX_PINCM29_PF_TIMA0_CCP1 | IOMUX_PINCM_PC_CONNECTED);
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM29] &= ~IOMUX_PINCM_INENA_ENABLE;
+			GPIOB->DOESET31_0 |= (1 << 12);
+			
+			TIMA0->COUNTERREGS.CC_01[1] = (uint32_t)((double)period * (1-percentDutyCycle));
+			TIMA0->COUNTERREGS.CCCTL_01[1] = 0;
+			TIMA0->COMMONREGS.CCPD |= 1;
+			TIMA0->COUNTERREGS.CCACT_01[1] = GPTIMER_CCACT_01_LACT_CCP_HIGH | GPTIMER_CCACT_01_CDACT_CCP_LOW;
+			TIMA0->COUNTERREGS.OCTL_01[1] = 0;
+			
+			// Enable TimerA0 Channel 1 (starts integration timing)
+			TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 		}
 		else if (pin == 2){
-		// Configure PB17 as output (no input, no inversion)
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM43] |= (0x80 | 0x01);
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM43] &= ~IOMUX_PINCM_INENA_ENABLE;
-    // Enable TimerA6 (starts integration timing)
-    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
-    GPIOB->DOESET31_0 |= (1 << 17);
+			// Configure PB17 as output (no input, no inversion)
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM43] |= (IOMUX_PINCM43_PF_TIMA0_CCP2 | IOMUX_PINCM_PC_CONNECTED);
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM43] &= ~IOMUX_PINCM_INENA_ENABLE;
+			GPIOB->DOESET31_0 |= (1 << 17);
+			
+			TIMA0->COUNTERREGS.CC_23[0] = (uint32_t)((double)period * (1-percentDutyCycle));
+			TIMA0->COUNTERREGS.CCCTL_23[0] = 0;
+			TIMA0->COMMONREGS.CCPD |= 1;
+			TIMA0->COUNTERREGS.CCACT_23[0] = GPTIMER_CCACT_23_LACT_CCP_HIGH | GPTIMER_CCACT_23_CDACT_CCP_LOW;
+			TIMA0->COUNTERREGS.OCTL_23[0] = 0;
+			
+			// Enable TimerA0 Channel 2 (starts integration timing)
+			TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 		}
 		else if (pin ==3){
-		// Configure PB13 as output (no input, no inversion)
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM30] |= (0x80 | 0x01);
-    IOMUX->SECCFG.PINCM[IOMUX_PINCM30] &= ~IOMUX_PINCM_INENA_ENABLE;
-    // Enable TimerA6 (starts integration timing)
-    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
-    GPIOB->DOESET31_0 |= (1 << 13);
+			// Configure PB13 as output (no input, no inversion)
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM30] |= (IOMUX_PINCM30_PF_TIMA0_CCP3 | IOMUX_PINCM_PC_CONNECTED);
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM30] &= ~IOMUX_PINCM_INENA_ENABLE;
+			GPIOB->DOESET31_0 |= (1 << 13);
+			
+			TIMA0->COUNTERREGS.CC_23[1] = (uint32_t)((double)period * (1-percentDutyCycle));
+			TIMA0->COUNTERREGS.CCCTL_23[1] = 0;
+			TIMA0->COMMONREGS.CCPD |= 1;
+			TIMA0->COUNTERREGS.CCACT_23[1] = GPTIMER_CCACT_23_LACT_CCP_HIGH | GPTIMER_CCACT_23_CDACT_CCP_LOW;
+			TIMA0->COUNTERREGS.OCTL_23[1] = 0;
+			
+			// Enable TimerA0 Channel 3 (starts integration timing)
+			TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 		}
 		else{
 			UART0_put((uint8_t*)("Error. Pin does not exist :(\r\n"));
@@ -296,6 +324,7 @@ void TIMA1_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 }
 
 void TIMA0_PWM_DutyCycle(uint8_t pin, double percentDutyCycle) {
+	
 	
 }
 
