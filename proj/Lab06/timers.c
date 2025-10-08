@@ -13,7 +13,7 @@
  * @date   10/07/2025
  */
 
-#include "lab5/timers.h"
+#include "lab6/timers.h"
 #include <ti/devices/msp/msp.h>
 #include "sysctl.h"
 
@@ -176,4 +176,20 @@ void TIMG12_init(uint32_t period) {
 
     // Re-enable interrupts
     __enable_irq();
+}
+
+void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double percentDutyCycle) {
+	
+}
+
+void TIMA1_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double percentDutyCycle) {
+	
+}
+
+void TIMA0_PWM_DutyCycle(uint8_t pin, double percentDutyCycle) {
+	
+}
+
+void TIMA1_PWM_DutyCycle(uint8_t pin, double percentDutyCycle) {
+	
 }

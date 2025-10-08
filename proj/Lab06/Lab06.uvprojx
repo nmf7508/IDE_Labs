@@ -499,26 +499,6 @@
               <FilePath>..\..\lib\lab6\timers.h</FilePath>
             </File>
             <File>
-              <FileName>sysctl.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\lib\sysctl.c</FilePath>
-            </File>
-            <File>
-              <FileName>sysctl.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\lib\sysctl.h</FilePath>
-            </File>
-            <File>
-              <FileName>uart_extras.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\lib\uart_extras.c</FilePath>
-            </File>
-            <File>
-              <FileName>uart_extras.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\lib\uart_extras.h</FilePath>
-            </File>
-            <File>
               <FileName>isrs.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Lab05\isrs.c</FilePath>
@@ -549,5 +529,20 @@
     </components>
     <files/>
   </RTE>
+
+  <LayerInfo>
+    <Layers>
+      <Layer>
+        <LayName>&lt;Project Info&gt;</LayName>
+        <LayDesc></LayDesc>
+        <LayUrl></LayUrl>
+        <LayKeys></LayKeys>
+        <LayCat></LayCat>
+        <LayLic></LayLic>
+        <LayTarg>0</LayTarg>
+        <LayPrjMark>1</LayPrjMark>
+      </Layer>
+    </Layers>
+  </LayerInfo>
 
 </Project>
