@@ -178,12 +178,71 @@ void TIMG12_init(uint32_t period) {
     __enable_irq();
 }
 
+// Channel 0 - PB8, Channel 1 - PB12, Channel 2 - PB17, Channel 3 - PB13
 void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double percentDutyCycle) {
+	// Ensure TIMG6 is powered and reset properly
+    if (!(TIMA0->GPRCM.PWREN & GPTIMER_PWREN_ENABLE_ENABLE)) {
+        // Reset the module
+        TIMA0->GPRCM.RSTCTL = GPTIMER_RSTCTL_KEY_UNLOCK_W | GPTIMER_RSTCTL_RESETASSERT_ASSERT;
+        TIMA0->GPRCM.RSTCTL &= ~GPTIMER_RSTCTL_KEY_UNLOCK_W;
+
+        // Enable power
+        TIMA0->GPRCM.PWREN = GPTIMER_PWREN_KEY_UNLOCK_W | GPTIMER_PWREN_ENABLE_ENABLE;
+        TIMA0->GPRCM.PWREN &= ~GPTIMER_PWREN_KEY_UNLOCK_W;
+    }
+
+    // Select BUSCLK as the clock source
+    TIMA0->CLKSEL |= GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE;
+
+    // Configure timer behavior
+    TIMA0->COUNTERREGS.CTRCTL = 0;
+    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_CM_DOWN;
+    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_CVAE_LDVAL;
+    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_REPEAT_REPEAT_1;
+
+    // Set clock divider and prescaler
+    TIMA0->CLKDIV |= GPTIMER_CLKDIV_RATIO_DIV_BY_8;
+    TIMA0->COMMONREGS.CPS = prescaler;
+
+    // Set period (reload value)
+    TIMA0->COUNTERREGS.LOAD = period;
+
+    // Enable timer clock
+    TIMA0->COMMONREGS.CCLKCTL |= GPTIMER_CCLKCTL_CLKEN_ENABLED;
 	
 }
 
+// Channel 0 - PB4
 void TIMA1_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double percentDutyCycle) {
-	
+	// Ensure TIMG6 is powered and reset properly
+    if (!(TIMA1->GPRCM.PWREN & GPTIMER_PWREN_ENABLE_ENABLE)) {
+        // Reset the module
+        TIMA1->GPRCM.RSTCTL = GPTIMER_RSTCTL_KEY_UNLOCK_W | GPTIMER_RSTCTL_RESETASSERT_ASSERT;
+        TIMA1->GPRCM.RSTCTL &= ~GPTIMER_RSTCTL_KEY_UNLOCK_W;
+
+        // Enable power
+        TIMA1->GPRCM.PWREN = GPTIMER_PWREN_KEY_UNLOCK_W | GPTIMER_PWREN_ENABLE_ENABLE;
+        TIMA1->GPRCM.PWREN &= ~GPTIMER_PWREN_KEY_UNLOCK_W;
+    }
+
+    // Select BUSCLK as the clock source
+    TIMA1->CLKSEL |= GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE;
+
+    // Configure timer behavior
+    TIMA1->COUNTERREGS.CTRCTL = 0;
+    TIMA1->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_CM_DOWN;
+    TIMA1->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_CVAE_LDVAL;
+    TIMA1->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_REPEAT_REPEAT_1;
+
+    // Set clock divider and prescaler
+    TIMA1->CLKDIV |= GPTIMER_CLKDIV_RATIO_DIV_BY_8;
+    TIMA1->COMMONREGS.CPS = prescaler;
+
+    // Set period (reload value)
+    TIMA1->COUNTERREGS.LOAD = period;
+
+    // Enable timer clock
+    TIMA1->COMMONREGS.CCLKCTL |= GPTIMER_CCLKCTL_CLKEN_ENABLED;
 }
 
 void TIMA0_PWM_DutyCycle(uint8_t pin, double percentDutyCycle) {
