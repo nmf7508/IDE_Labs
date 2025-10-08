@@ -16,6 +16,7 @@
 #include "lab6/timers.h"
 #include <ti/devices/msp/msp.h>
 #include "sysctl.h"
+#include "lab4/uart.h"
 
 /**
  * @brief Initializes Timer G0 as a general-purpose countdown timer.
@@ -209,6 +210,55 @@ void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 
     // Enable timer clock
     TIMA0->COMMONREGS.CCLKCTL |= GPTIMER_CCLKCTL_CLKEN_ENABLED;
+		
+		if (pin <= 3){
+			// Enable and configure GPIOB peripheral if not already active
+			if (!(GPIOB->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
+        GPIOB->GPRCM.RSTCTL = GPIO_RSTCTL_KEY_UNLOCK_W | GPIO_RSTCTL_RESETASSERT_ASSERT;
+        GPIOB->GPRCM.RSTCTL &= ~GPIO_RSTCTL_KEY_UNLOCK_W;
+        GPIOB->GPRCM.PWREN = GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE;
+        GPIOB->GPRCM.PWREN &= ~GPIO_PWREN_KEY_UNLOCK_W;
+			}
+		}
+		
+		if (pin == 0){
+    // Configure PB8 as output (no input, no inversion)
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM25] |= (0x80 | 0x01);
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM25] &= ~IOMUX_PINCM_INENA_ENABLE;
+    // Enable TimerA6 (starts integration timing)
+    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+    GPIOB->DOESET31_0 |= (1 << 8);
+		}
+		else if (pin == 1){
+		// Configure PB12 as output (no input, no inversion)
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM29] |= (0x80 | 0x01);
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM29] &= ~IOMUX_PINCM_INENA_ENABLE;
+    // Enable TimerA6 (starts integration timing)
+    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+    GPIOB->DOESET31_0 |= (1 << 12);
+		}
+		else if (pin == 2){
+		// Configure PB17 as output (no input, no inversion)
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM43] |= (0x80 | 0x01);
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM43] &= ~IOMUX_PINCM_INENA_ENABLE;
+    // Enable TimerA6 (starts integration timing)
+    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+    GPIOB->DOESET31_0 |= (1 << 17);
+		}
+		else if (pin ==3){
+		// Configure PB13 as output (no input, no inversion)
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM30] |= (0x80 | 0x01);
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM30] &= ~IOMUX_PINCM_INENA_ENABLE;
+    // Enable TimerA6 (starts integration timing)
+    TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+    GPIOB->DOESET31_0 |= (1 << 13);
+		}
+		else{
+			UART0_put((uint8_t*)("Error. Pin does not exist :(\r\n"));
+		}
+		
+
+		
 	
 }
 
