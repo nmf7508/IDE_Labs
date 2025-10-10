@@ -282,12 +282,8 @@ void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 			TIMA0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 		}
 		else{
-			UART0_put((uint8_t*)("Error. Pin does not exist :(\r\n"));
+			UART0_put((uint8_t*)("Error. TIMA0 Pin does not exist :(\r\n"));
 		}
-		
-
-		
-	
 }
 
 // Channel 0 - PB4
@@ -321,13 +317,63 @@ void TIMA1_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 
     // Enable timer clock
     TIMA1->COMMONREGS.CCLKCTL |= GPTIMER_CCLKCTL_CLKEN_ENABLED;
+		
+				if (pin <= 3){
+			// Enable and configure GPIOB peripheral if not already active
+			if (!(GPIOB->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
+        GPIOB->GPRCM.RSTCTL = GPIO_RSTCTL_KEY_UNLOCK_W | GPIO_RSTCTL_RESETASSERT_ASSERT;
+        GPIOB->GPRCM.RSTCTL &= ~GPIO_RSTCTL_KEY_UNLOCK_W;
+        GPIOB->GPRCM.PWREN = GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE;
+        GPIOB->GPRCM.PWREN &= ~GPIO_PWREN_KEY_UNLOCK_W;
+			}
+		}
+		
+		if (pin == 0){
+			// Configure PB4 as output (no input, no inversion)
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM17] |= IOMUX_PINCM17_PF_TIMA1_CCP0 | IOMUX_PINCM_PC_CONNECTED;
+			IOMUX->SECCFG.PINCM[IOMUX_PINCM17] &= ~IOMUX_PINCM_INENA_ENABLE;
+			GPIOB->DOESET31_0 |= (1 << 17);
+			
+			TIMA1->COUNTERREGS.CC_01[0] = (uint32_t)((double)period * (1-percentDutyCycle));
+			TIMA1->COUNTERREGS.CCCTL_01[0] = 0;
+			TIMA1->COMMONREGS.CCPD |= 1;
+			TIMA1->COUNTERREGS.CCACT_01[0] = GPTIMER_CCACT_01_LACT_CCP_HIGH | GPTIMER_CCACT_01_CDACT_CCP_LOW;
+			TIMA1->COUNTERREGS.OCTL_01[0] = 0;
+
+			// Enable TimerA0 Channel 0 (starts integration timing)
+			TIMA1->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+			}
+		else{
+			UART0_put((uint8_t*)("Error. TIMA1 Pin does not exist :(\r\n"));
+		}
 }
 
+	/**
+ * @brief Update PWM duty cycle for Timer A0 channel.
+ * @param pin Channel index (0–3)
+ * @param percentDutyCycle Duty cycle (0.0–1.0)
+ */
 void TIMA0_PWM_DutyCycle(uint8_t pin, double percentDutyCycle) {
-	
-	
+    uint32_t period = TIMA0->COUNTERREGS.LOAD;
+
+    if (pin == 0)
+        TIMA0->COUNTERREGS.CC_01[0] = (uint32_t)((double)period * (1 - percentDutyCycle));
+    else if (pin == 1)
+        TIMA0->COUNTERREGS.CC_01[1] = (uint32_t)((double)period * (1 - percentDutyCycle));
+    else if (pin == 2)
+        TIMA0->COUNTERREGS.CC_23[0] = (uint32_t)((double)period * (1 - percentDutyCycle));
+    else if (pin == 3)
+        TIMA0->COUNTERREGS.CC_23[1] = (uint32_t)((double)period * (1 - percentDutyCycle));
 }
 
+
+/**
+ * @brief Update PWM duty cycle for Timer A1 (channel 0 on PB4)
+ * @param pin Channel index (0)
+ * @param percentDutyCycle Duty cycle (0.0–1.0)
+ */
 void TIMA1_PWM_DutyCycle(uint8_t pin, double percentDutyCycle) {
-	
+    if (pin != 0) return; // only channel 0 exists
+    uint32_t period = TIMA1->COUNTERREGS.LOAD;
+    TIMA1->COUNTERREGS.CC_01[0] = (uint32_t)((double)period * (1 - percentDutyCycle));
 }
