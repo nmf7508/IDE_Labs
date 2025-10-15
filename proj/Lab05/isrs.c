@@ -42,6 +42,7 @@ static long int timeElapsed = 0; // Tracks elapsed time in ms
 volatile uint8_t cameraData_complete = 0; // Set when full camera frame line captured
 volatile int pixelCounter = 0;            // Counts CLK pulses for pixel capture (including dummy cycles)
 uint16_t cameraData[128];                 // Buffer to store 128-pixel camera line
+volatile int delayOver = 0;
 #if MODE == 3
 static bool read;                         // Toggles between read and idle phases for CLK synchronization
 #endif
@@ -108,7 +109,8 @@ void GROUP1_IRQHandler(void) {
 void TIMG0_IRQHandler(void) {
 	// Clear timer interrupt flag
 	TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-
+	TIMG6->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;
+	delayOver = 1;
 #if MODE == 3
 	// Toggle GPIO (CLK line simulation for debugging or external trigger)
 	GPIOA->DOUTTGL31_0 |= (1 << 12);
