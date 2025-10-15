@@ -14,6 +14,8 @@
 
 #include <stdint.h>
 
+extern volatile int delayOver;
+
 /**
  * @brief Timer G0 module initialization. General purpose timer
  * @note Timer G0 is in Power Domain 0. Check page 3 of the Data Sheet

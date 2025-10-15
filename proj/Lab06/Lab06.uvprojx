@@ -506,7 +506,7 @@
             <File>
               <FileName>isrs.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Lab05\isrs.h</FilePath>
+              <FilePath>..\..\lib\lab6\isrs.h</FilePath>
             </File>
           </Files>
         </Group>

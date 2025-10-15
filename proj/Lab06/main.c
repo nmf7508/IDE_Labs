@@ -4,9 +4,9 @@
 #include "lab1/leds.h"
 #include <ti/devices/msp/msp.h>
 
+
 static volatile uint8_t motorRunning = 0;
 static volatile double duty = 0.2; // 50% start
-extern volatile int delayOver;
 
 int main(void) {
     __disable_irq();

@@ -33,6 +33,7 @@
 #include "lab5/adc12.h"
 #include "lab5/camera.h"
 #include <stdio.h>
+#include "lab6/timers.h"
 
 #if MODE == 0
 static int timerOn = 0;        // Flag for stopwatch state (on/off)
@@ -46,6 +47,8 @@ volatile int delayOver = 0;
 #if MODE == 3
 static bool read;                         // Toggles between read and idle phases for CLK synchronization
 #endif
+
+
 
 
 /**

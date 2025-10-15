@@ -17,6 +17,7 @@
 #include <ti/devices/msp/msp.h>
 #include "sysctl.h"
 #include "lab4/uart.h"
+#include "lab6/isrs.h"
 
 /**
  * @brief Initializes Timer G0 as a general-purpose countdown timer.
@@ -244,7 +245,7 @@ void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 			
 			TIMA0->COUNTERREGS.CC_01[1] = (uint32_t)((double)period * (1-percentDutyCycle));
 			TIMA0->COUNTERREGS.CCCTL_01[1] = 0;
-			TIMA0->COMMONREGS.CCPD |= 1;
+			TIMA0->COMMONREGS.CCPD |= 2;
 			TIMA0->COUNTERREGS.CCACT_01[1] = GPTIMER_CCACT_01_LACT_CCP_HIGH | GPTIMER_CCACT_01_CDACT_CCP_LOW;
 			TIMA0->COUNTERREGS.OCTL_01[1] = 0;
 			
@@ -259,7 +260,7 @@ void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 			
 			TIMA0->COUNTERREGS.CC_23[0] = (uint32_t)((double)period * (1-percentDutyCycle));
 			TIMA0->COUNTERREGS.CCCTL_23[0] = 0;
-			TIMA0->COMMONREGS.CCPD |= 1;
+			TIMA0->COMMONREGS.CCPD |= 4;
 			TIMA0->COUNTERREGS.CCACT_23[0] = GPTIMER_CCACT_23_LACT_CCP_HIGH | GPTIMER_CCACT_23_CDACT_CCP_LOW;
 			TIMA0->COUNTERREGS.OCTL_23[0] = 0;
 			
@@ -274,7 +275,7 @@ void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 			
 			TIMA0->COUNTERREGS.CC_23[1] = (uint32_t)((double)period * (1-percentDutyCycle));
 			TIMA0->COUNTERREGS.CCCTL_23[1] = 0;
-			TIMA0->COMMONREGS.CCPD |= 1;
+			TIMA0->COMMONREGS.CCPD |= 2;
 			TIMA0->COUNTERREGS.CCACT_23[1] = GPTIMER_CCACT_23_LACT_CCP_HIGH | GPTIMER_CCACT_23_CDACT_CCP_LOW;
 			TIMA0->COUNTERREGS.OCTL_23[1] = 0;
 			
