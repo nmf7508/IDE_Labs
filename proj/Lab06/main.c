@@ -6,10 +6,7 @@
 
 
 static volatile uint8_t motorRunning = 0;
-static volatile double duty = 0.2; // 50% start
-static volatile double direction = 0.01;
-static volatile int counter = 0;
-static volatile int counter2 = 0;
+static volatile double duty = 0.2;
 
 int main(void) {
     __disable_irq();
@@ -34,6 +31,32 @@ int main(void) {
     UART0_put((uint8_t *)"Motor Control Lab 6 Initialized\r\n");
 		duty = 0;
     while (1) {
+			// ADD a delay after each one. 
+			TIMA0_PWM_DutyCycle(0, 10);
+			TIMA0_PWM_DutyCycle(0, 30);
+			TIMA0_PWM_DutyCycle(0, 50);			
+			TIMA0_PWM_DutyCycle(0, 70);			
+			TIMA0_PWM_DutyCycle(0, 90);			
+			TIMA0_PWM_DutyCycle(0, 100);
+			TIMA0_PWM_DutyCycle(0, 90);
+			TIMA0_PWM_DutyCycle(0, 70);
+			TIMA0_PWM_DutyCycle(0, 50);
+			TIMA0_PWM_DutyCycle(0, 30);
+			TIMA0_PWM_DutyCycle(0, 10);
+			TIMA0_PWM_DutyCycle(0, 0);
+			TIMA0_PWM_DutyCycle(1, 10);
+			TIMA0_PWM_DutyCycle(1, 30);
+			TIMA0_PWM_DutyCycle(1, 50);			
+			TIMA0_PWM_DutyCycle(1, 70);			
+			TIMA0_PWM_DutyCycle(1, 90);			
+			TIMA0_PWM_DutyCycle(1, 100);
+			TIMA0_PWM_DutyCycle(1, 90);
+			TIMA0_PWM_DutyCycle(1, 70);
+			TIMA0_PWM_DutyCycle(1, 50);
+			TIMA0_PWM_DutyCycle(1, 30);
+			TIMA0_PWM_DutyCycle(1, 10);
+			TIMA0_PWM_DutyCycle(1, 0);
+			/**
 			if((counter%500) == 0){
 				counter2 = 0;
 			}
@@ -67,5 +90,6 @@ int main(void) {
 			}
 			delayOver = 0;
 			counter++;
+			**/
     }
 }
