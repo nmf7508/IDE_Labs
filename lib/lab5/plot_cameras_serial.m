@@ -91,20 +91,34 @@ function data = smoothData(data)
 
 end
 
-function data = edgeData(data)
-    for i = 1:128
-        % TODO: Edge detection (binary 0 or 1)
-        data(i) = data(i) > 0; % Simple binary edge detection
-        data(i) = double(data(i) > 0); % Convert to binary (0 or 1)
+function bintrace = edgeData(data)
+    % Smooth data first to reduce noise
+    smoothData = movmean(data, 5);
 
+    % Compute derivative
+    diffData = [0, diff(smoothData)];
+
+    % Adaptive threshold based on derivative's standard deviation
+    threshold = 1.25 * std(diffData);  % tweak multiplier for sensitivity
+
+    % Identify edges
+    edges = abs(diffData) > threshold;
+
+    % Optional: keep only local maxima for cleaner edges
+    for i = 2:length(edges)-1
+        if edges(i) && ~(abs(diffData(i)) > abs(diffData(i-1)) && abs(diffData(i)) >= abs(diffData(i+1)))
+            edges(i) = 0;
+        end
     end
+
+    bintrace = double(edges);
 end
 
 function plotdata(trace, smoothtrace, bintrace, plt, ax1, ax2, ax3)
     % TODO: Plot data
-    plot(ax1, trace)
-    plot(ax2, smoothtrace)
-    plot(ax3, bintrace)
+    plot(ax1, trace, 'LineWidth', 1.5); title(ax1,'Raw Trace'); ylabel(ax1,'Amplitude');
+    plot(ax2, smoothtrace, 'LineWidth', 1.5); title(ax2,'Smoothed Trace'); ylabel(ax2,'Amplitude');
+    plot(ax3, bintrace, 'LineWidth', 1.5); title(ax3,'Edge Detection');
 
     refreshdata
     drawnow
