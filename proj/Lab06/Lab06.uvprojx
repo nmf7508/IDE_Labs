@@ -508,6 +508,16 @@
               <FileType>5</FileType>
               <FilePath>..\..\lib\lab6\isrs.h</FilePath>
             </File>
+            <File>
+              <FileName>motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\motor.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\motor.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

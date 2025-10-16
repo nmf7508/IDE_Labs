@@ -8,6 +8,13 @@
 static volatile uint8_t motorRunning = 0;
 static volatile double duty = 0.2;
 
+// Delay function
+static void delay(void) {
+    volatile uint32_t i;
+    for (i = 0; i < 2000000U; i++) {
+    }
+}
+
 int main(void) {
     __disable_irq();
 
@@ -32,30 +39,30 @@ int main(void) {
 		duty = 0;
     while (1) {
 			// ADD a delay after each one. 
-			TIMA0_PWM_DutyCycle(0, 10);
-			TIMA0_PWM_DutyCycle(0, 30);
-			TIMA0_PWM_DutyCycle(0, 50);			
-			TIMA0_PWM_DutyCycle(0, 70);			
-			TIMA0_PWM_DutyCycle(0, 90);			
-			TIMA0_PWM_DutyCycle(0, 100);
-			TIMA0_PWM_DutyCycle(0, 90);
-			TIMA0_PWM_DutyCycle(0, 70);
-			TIMA0_PWM_DutyCycle(0, 50);
-			TIMA0_PWM_DutyCycle(0, 30);
-			TIMA0_PWM_DutyCycle(0, 10);
-			TIMA0_PWM_DutyCycle(0, 0);
-			TIMA0_PWM_DutyCycle(1, 10);
-			TIMA0_PWM_DutyCycle(1, 30);
-			TIMA0_PWM_DutyCycle(1, 50);			
-			TIMA0_PWM_DutyCycle(1, 70);			
-			TIMA0_PWM_DutyCycle(1, 90);			
-			TIMA0_PWM_DutyCycle(1, 100);
-			TIMA0_PWM_DutyCycle(1, 90);
-			TIMA0_PWM_DutyCycle(1, 70);
-			TIMA0_PWM_DutyCycle(1, 50);
-			TIMA0_PWM_DutyCycle(1, 30);
-			TIMA0_PWM_DutyCycle(1, 10);
-			TIMA0_PWM_DutyCycle(1, 0);
+			TIMA0_PWM_DutyCycle(0, 10);			delay();
+			TIMA0_PWM_DutyCycle(0, 30);			delay();
+			TIMA0_PWM_DutyCycle(0, 50);			delay();
+			TIMA0_PWM_DutyCycle(0, 70);			delay();
+			TIMA0_PWM_DutyCycle(0, 90);			delay();
+			TIMA0_PWM_DutyCycle(0, 100);		delay();
+			TIMA0_PWM_DutyCycle(0, 90);			delay();
+			TIMA0_PWM_DutyCycle(0, 70);			delay();
+			TIMA0_PWM_DutyCycle(0, 50);			delay();
+			TIMA0_PWM_DutyCycle(0, 30);			delay();
+			TIMA0_PWM_DutyCycle(0, 10);			delay();
+			TIMA0_PWM_DutyCycle(0, 0);			delay();
+			TIMA0_PWM_DutyCycle(1, 10);			delay();
+			TIMA0_PWM_DutyCycle(1, 30);			delay();
+			TIMA0_PWM_DutyCycle(1, 50);			delay();
+			TIMA0_PWM_DutyCycle(1, 70);			delay();
+			TIMA0_PWM_DutyCycle(1, 90);			delay();
+			TIMA0_PWM_DutyCycle(1, 100);		delay();
+			TIMA0_PWM_DutyCycle(1, 90);			delay();
+			TIMA0_PWM_DutyCycle(1, 70);			delay();
+			TIMA0_PWM_DutyCycle(1, 50);			delay();
+			TIMA0_PWM_DutyCycle(1, 30);			delay();
+			TIMA0_PWM_DutyCycle(1, 10);			delay();
+			TIMA0_PWM_DutyCycle(1, 0);			delay();
 			/**
 			if((counter%500) == 0){
 				counter2 = 0;
