@@ -4,6 +4,12 @@
 #include "lab1/leds.h"
 #include <ti/devices/msp/msp.h>
 
+// Delay function
+static void delay(void) {
+    volatile uint32_t i;
+    for (i = 0; i < 2000000U; i++) {
+    }
+}
 
 static volatile uint8_t motorRunning = 0;
 static volatile double duty = 0.2;
@@ -38,65 +44,31 @@ int main(void) {
     UART0_put((uint8_t *)"Motor Control Lab 6 Initialized\r\n");
 		duty = 0;
     while (1) {
-			// ADD a delay after each one. 
-			TIMA0_PWM_DutyCycle(0, 10);			delay();
-			TIMA0_PWM_DutyCycle(0, 30);			delay();
-			TIMA0_PWM_DutyCycle(0, 50);			delay();
-			TIMA0_PWM_DutyCycle(0, 70);			delay();
-			TIMA0_PWM_DutyCycle(0, 90);			delay();
-			TIMA0_PWM_DutyCycle(0, 100);		delay();
-			TIMA0_PWM_DutyCycle(0, 90);			delay();
-			TIMA0_PWM_DutyCycle(0, 70);			delay();
-			TIMA0_PWM_DutyCycle(0, 50);			delay();
-			TIMA0_PWM_DutyCycle(0, 30);			delay();
-			TIMA0_PWM_DutyCycle(0, 10);			delay();
-			TIMA0_PWM_DutyCycle(0, 0);			delay();
-			TIMA0_PWM_DutyCycle(1, 10);			delay();
-			TIMA0_PWM_DutyCycle(1, 30);			delay();
-			TIMA0_PWM_DutyCycle(1, 50);			delay();
-			TIMA0_PWM_DutyCycle(1, 70);			delay();
-			TIMA0_PWM_DutyCycle(1, 90);			delay();
-			TIMA0_PWM_DutyCycle(1, 100);		delay();
-			TIMA0_PWM_DutyCycle(1, 90);			delay();
-			TIMA0_PWM_DutyCycle(1, 70);			delay();
-			TIMA0_PWM_DutyCycle(1, 50);			delay();
-			TIMA0_PWM_DutyCycle(1, 30);			delay();
-			TIMA0_PWM_DutyCycle(1, 10);			delay();
-			TIMA0_PWM_DutyCycle(1, 0);			delay();
-			/**
-			if((counter%500) == 0){
-				counter2 = 0;
-			}
-			if ((counter / 500)%2 == 0){
-				TIMA0_PWM_DutyCycle(1, 0);
-				if (counter2 > 20) {
-				TIMA0_PWM_DutyCycle(0, duty);
-
-				}
-				counter2++;
-			}
-			else {
-				if (counter2 > 20) {
-					TIMA0_PWM_DutyCycle(0, 0);
-				TIMA0_PWM_DutyCycle(1, duty);
-				}
-				counter2++;
-			}
-			//TIMA0_PWM_DutyCycle(1, duty);
-			//TIMA0_PWM_DutyCycle(2, duty);
-			//TIMA0_PWM_DutyCycle(3, ((double)1-duty));
-			
-			duty = duty + direction;
-			if (duty >= 1 || duty <= 0) {
-				direction = direction * (double)-1;
-				//counter++;
-			}
-			TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
-			while (!delayOver){
-	
-			}
-			delayOver = 0;
-			counter++;
-			**/
+			TIMA0_PWM_DutyCycle(1, 0);				delay();
+			TIMA0_PWM_DutyCycle(0, 0);				delay();
+			TIMA0_PWM_DutyCycle(0, 0.1);			delay();
+			TIMA0_PWM_DutyCycle(0, 0.3);			delay();
+			TIMA0_PWM_DutyCycle(0, 0.5);			delay();
+			TIMA0_PWM_DutyCycle(0, 0.7);			delay();
+			TIMA0_PWM_DutyCycle(0, 0.9);			delay();
+			TIMA0_PWM_DutyCycle(0, 1);				delay();		delay();
+			TIMA0_PWM_DutyCycle(0, 0.9);			delay();
+			TIMA0_PWM_DutyCycle(0, 0.7);			delay();
+			TIMA0_PWM_DutyCycle(0, 0.5);			delay();
+			TIMA0_PWM_DutyCycle(0, 0.3);			delay();
+			TIMA0_PWM_DutyCycle(0, 0.1);			delay();
+			TIMA0_PWM_DutyCycle(0, 0);				delay();
+			TIMA0_PWM_DutyCycle(1, 0.1);			delay();
+			TIMA0_PWM_DutyCycle(1, 0.3);			delay();
+			TIMA0_PWM_DutyCycle(1, 0.5);			delay();
+			TIMA0_PWM_DutyCycle(1, 0.7);			delay();
+			TIMA0_PWM_DutyCycle(1, 0.9);			delay();
+			TIMA0_PWM_DutyCycle(1, 1);				delay();		delay();
+			TIMA0_PWM_DutyCycle(1, 0.9);			delay();
+			TIMA0_PWM_DutyCycle(1, 0.7);			delay();
+			TIMA0_PWM_DutyCycle(1, 0.5);			delay();
+			TIMA0_PWM_DutyCycle(1, 0.3);			delay();
+			TIMA0_PWM_DutyCycle(1, 0.1);			delay();
+			TIMA0_PWM_DutyCycle(1, 0);				delay();
     }
 }
