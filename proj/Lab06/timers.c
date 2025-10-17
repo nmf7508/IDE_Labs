@@ -275,7 +275,7 @@ void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 			
 			TIMA0->COUNTERREGS.CC_23[1] = (uint32_t)((double)period * (1-percentDutyCycle));
 			TIMA0->COUNTERREGS.CCCTL_23[1] = 0;
-			TIMA0->COMMONREGS.CCPD |= 2;
+			TIMA0->COMMONREGS.CCPD |= 8;
 			TIMA0->COUNTERREGS.CCACT_23[1] = GPTIMER_CCACT_23_LACT_CCP_HIGH | GPTIMER_CCACT_23_CDACT_CCP_LOW;
 			TIMA0->COUNTERREGS.OCTL_23[1] = 0;
 			

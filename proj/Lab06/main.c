@@ -107,14 +107,14 @@ int main(void) {
 					
     } **/
 		while(1) {
+			delay_ms(1000);
 			TIMA1_PWM_DutyCycle(0, .05);
-			delay_ms(500);
+			delay_ms(1000);
 			TIMA1_PWM_DutyCycle(0, .075);
-			delay_ms(500);
+			delay_ms(1000);
 			TIMA1_PWM_DutyCycle(0, .1);
-			delay_ms(500);
+			delay_ms(1000);
 			TIMA1_PWM_DutyCycle(0, .075);
-			delay_ms(500);
 		}
 		
 }
