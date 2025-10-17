@@ -3,6 +3,7 @@
 #include "lab4/uart.h"
 #include "lab1/leds.h"
 #include <ti/devices/msp/msp.h>
+#include "motor.h"
 
 // Delay function
 static void delay(void) {
@@ -11,15 +12,7 @@ static void delay(void) {
     }
 }
 
-static volatile uint8_t motorRunning = 0;
 static volatile double duty = 0.2;
-
-// Delay function
-static void delay(void) {
-    volatile uint32_t i;
-    for (i = 0; i < 2000000U; i++) {
-    }
-}
 
 int main(void) {
     __disable_irq();
@@ -42,8 +35,21 @@ int main(void) {
     __enable_irq();
 
     UART0_put((uint8_t *)"Motor Control Lab 6 Initialized\r\n");
-		duty = 0;
+	
+		UART0_init();
+		Stepper_Motor_Init();
+
+    UART0_put((uint8_t *)"Lab 6: Stepper Motor Demo Initialized\r\n");
+
+    int forward = 0; // 1 for forward, 0 for reverse
+
     while (1) {
+        Stepper_Motor_Step(forward);
+        delay_ms(5); // Adjust this delay to change the motor speed
+    }
+	
+    /**while (1) {
+			 // LAB 6 Part 1 Code
 			TIMA0_PWM_DutyCycle(1, 0);				delay();
 			TIMA0_PWM_DutyCycle(0, 0);				delay();
 			TIMA0_PWM_DutyCycle(0, 0.1);			delay();
@@ -70,5 +76,6 @@ int main(void) {
 			TIMA0_PWM_DutyCycle(1, 0.3);			delay();
 			TIMA0_PWM_DutyCycle(1, 0.1);			delay();
 			TIMA0_PWM_DutyCycle(1, 0);				delay();
-    }
+					
+    } **/
 }
