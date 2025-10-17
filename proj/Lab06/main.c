@@ -28,7 +28,7 @@ int main(void) {
 		TIMA0_PWM_init(1, 400, 0, duty);  // channel 1 - 20% Duty cycle @ 10KHz
 		TIMA0_PWM_init(2, 400, 0, duty);  // channel 2 - 20% Duty cycle @ 10KHz
 		TIMA0_PWM_init(3, 400, 0, duty);  // channel 3 - 20% Duty cycle @ 10KHz
-    TIMA1_PWM_init(0, 400, 0, duty);  // channel 0
+    TIMA1_PWM_init(0, 2500, 256, .075);  // channel 0 - 7.5% Duty cycle @ 50Hz
 		TIMG0_init(1250, 255);
 
     TIMG6_init(800000, 1);  // blinking/heartbeat
@@ -41,7 +41,7 @@ int main(void) {
 		UART0_put((uint8_t *)"Lab 6 Part 3: Servo Control Demo\r\n");
 
     int8_t angle = 0;
-
+		/*
     while (1) {
         // Sweep from -90 to +90 degrees
         UART0_put((uint8_t *)"Sweeping to +90 degrees...\r\n");
@@ -61,6 +61,7 @@ int main(void) {
 
         delay_ms(500); // Pause at the end
     }
+		*/
 	
 		/** LAB 6 PART 2 Code
 		Stepper_Motor_Init();
@@ -105,4 +106,17 @@ int main(void) {
 			TIMA0_PWM_DutyCycle(1, 0);				delay();
 					
     } **/
+		while(1) {
+			TIMA1_PWM_DutyCycle(0, .05);
+			delay_ms(500);
+			TIMA1_PWM_DutyCycle(0, .075);
+			delay_ms(500);
+			TIMA1_PWM_DutyCycle(0, .1);
+			delay_ms(500);
+			TIMA1_PWM_DutyCycle(0, .075);
+			delay_ms(500);
+		}
+		
 }
+
+
