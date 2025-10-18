@@ -13,7 +13,7 @@ static void delay(void) {
     }
 }
 
-static volatile double duty = 0.2;
+static volatile double duty = 0.3;
 
 int main(void) {
     __disable_irq();
@@ -25,9 +25,9 @@ int main(void) {
 		//Servo_Init();
 
     TIMA0_PWM_init(0, 400, 0, duty);  // channel 0 - 20% Duty cycle @ 10KHz
-		TIMA0_PWM_init(1, 400, 0, duty);  // channel 1 - 20% Duty cycle @ 10KHz
+		TIMA0_PWM_init(1, 400, 0, 0);  // channel 1 - 20% Duty cycle @ 10KHz
 		TIMA0_PWM_init(2, 400, 0, duty);  // channel 2 - 20% Duty cycle @ 10KHz
-		TIMA0_PWM_init(3, 400, 0, duty);  // channel 3 - 20% Duty cycle @ 10KHz
+		TIMA0_PWM_init(3, 400, 0, 0);  // channel 3 - 20% Duty cycle @ 10KHz
     TIMA1_PWM_init(0, 313, 255, .075);  // channel 0 - 7.5% Duty cycle @ 50Hz
 		TIMG0_init(1250, 255);
 
