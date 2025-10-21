@@ -12,93 +12,16 @@
 #include "lab6/timers.h" // Assuming your timer functions are here
 #include <stdlib.h>
 
-
-// A simple blocking delay function (can be shared by motor functions)
-void delay_ms(uint32_t ms) {
-    // This is a rough estimate; adjust the inner loop for your clock speed
-    volatile uint32_t i, j;
-    for (i = 0; i < ms; i++) {
-        for (j = 0; j < 4000; j++) {
-            __NOP();
-        }
-    }
-}
-
-// ==============================================================================
-// Part 1: DC Motor (H-Bridge) Control
-// ==============================================================================
-
-// PWM Period for 10kHz with 32MHz Clock (32M / 8 / 400 = 10k)
-#define DC_MOTOR_PERIOD 400
-#define DC_MOTOR_PRESCALER 0 // Assuming CLKDIV is set to 8 in TIMA0_PWM_init
-
-void DC_Motor_Init(void) {
-    // Initialize the PWM channels for both motors (Left: Ch0, Ch1; Right: Ch2, Ch3)
-    TIMA0_PWM_init(0, DC_MOTOR_PERIOD, DC_MOTOR_PRESCALER, 0.0); // Left Fwd (PB8)
-    TIMA0_PWM_init(1, DC_MOTOR_PERIOD, DC_MOTOR_PRESCALER, 0.0); // Left Rev (PB12)
-    TIMA0_PWM_init(2, DC_MOTOR_PERIOD, DC_MOTOR_PRESCALER, 0.0); // Right Fwd (PB17)
-    TIMA0_PWM_init(3, DC_MOTOR_PERIOD, DC_MOTOR_PRESCALER, 0.0); // Right Rev (PB13)
-
-    // --- Initialize H-Bridge Enable Pins ---
-    // Enable Power for GPIOA and GPIOB if not already done in PWM init
-    if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
-        GPIOA->GPRCM.PWREN = GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE;
-    }
-    if (!(GPIOB->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
-        GPIOB->GPRCM.PWREN = GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE;
-    }
-}
-
-void DC_Motor_Set_Speed(uint8_t channel, int8_t speed) {
-    uint8_t fwd_pin, rev_pin;
-
-    if (channel == 0) { // Left Motor
-        fwd_pin = 0;
-        rev_pin = 1;
-    } else { // Right Motor
-        fwd_pin = 2;
-        rev_pin = 3;
-    }
-
-    // Clamp speed to the range [-100, 100]
-    if (speed > 100) speed = 100;
-    if (speed < -100) speed = -100;
-
-    double percentDutyCycle = abs(speed) / 100.0;
-
-    if (speed > 0) { // Forward
-        TIMA0_PWM_DutyCycle(fwd_pin, percentDutyCycle);
-        TIMA0_PWM_DutyCycle(rev_pin, 0.0);
-    } else if (speed < 0) { // Reverse
-        TIMA0_PWM_DutyCycle(fwd_pin, 0.0);
-        TIMA0_PWM_DutyCycle(rev_pin, percentDutyCycle);
-    } else { // Stop
-        TIMA0_PWM_DutyCycle(fwd_pin, 0.0);
-        TIMA0_PWM_DutyCycle(rev_pin, 0.0);
-    }
-}
-
-void DC_Motor_Stop(void) {
-    DC_Motor_Set_Speed(0, 0); // Stop left motor
-    DC_Motor_Set_Speed(1, 0); // Stop right motor
-}
-
-// ==============================================================================
 // Part 2: Stepper Motor Control
-// ==============================================================================
 
 // Stepper Motor GPIO pin definitions
-#define COIL_A_PORT GPIOB
 #define COIL_A_PIN  (1 << 6)  // To 1a
-#define COIL_B_PORT GPIOB
 #define COIL_B_PIN  (1 << 7)  // To 2a
-#define COIL_C_PORT GPIOB
 #define COIL_C_PIN  (1 << 0)  // To 1b
-#define COIL_D_PORT GPIOB
 #define COIL_D_PIN  (1 << 16) // To 2b
 
 // Keeps track of the current phase of the stepper motor
-static int g_phase = 0;
+static int phase = 0;
 
 void Stepper_Motor_Init(void) {
     // Power on GPIOB if not already on
@@ -131,17 +54,17 @@ void Stepper_Motor_Step(int forward) {
     GPIOB->DOUTCLR31_0 = (COIL_A_PIN | COIL_B_PIN | COIL_C_PIN | COIL_D_PIN);
 
     if (forward) {
-        if (g_phase == 0) GPIOB->DOUTSET31_0 = COIL_A_PIN; // Phase A
-        else if (g_phase == 1) GPIOB->DOUTSET31_0 = COIL_B_PIN; // Phase B
-        else if (g_phase == 2) GPIOB->DOUTSET31_0 = COIL_C_PIN; // Phase C
+        if (phase == 0) GPIOB->DOUTSET31_0 = COIL_A_PIN; // Phase A
+        else if (phase == 1) GPIOB->DOUTSET31_0 = COIL_B_PIN; // Phase B
+        else if (phase == 2) GPIOB->DOUTSET31_0 = COIL_C_PIN; // Phase C
         else GPIOB->DOUTSET31_0 = COIL_D_PIN; // Phase D
     } else { // Reverse
-        if (g_phase == 0) GPIOB->DOUTSET31_0 = COIL_D_PIN; // Phase D
-        else if (g_phase == 1) GPIOB->DOUTSET31_0 = COIL_C_PIN; // Phase C
-        else if (g_phase == 2) GPIOB->DOUTSET31_0 = COIL_B_PIN; // Phase B
+        if (phase == 0) GPIOB->DOUTSET31_0 = COIL_D_PIN; // Phase D
+        else if (phase == 1) GPIOB->DOUTSET31_0 = COIL_C_PIN; // Phase C
+        else if (phase == 2) GPIOB->DOUTSET31_0 = COIL_B_PIN; // Phase B
         else GPIOB->DOUTSET31_0 = COIL_A_PIN; // Phase A
     }
 
     // Advance to the next phase for the next step
-    g_phase = (g_phase + 1) % 4;
+    phase = (phase + 1) % 4;
 }
