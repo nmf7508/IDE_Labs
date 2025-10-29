@@ -24,7 +24,6 @@
 #include "lab1/leds.h"
 #include <ti/devices/msp/msp.h>
 #include "motor.h"
-#include "servo.h"
 
 /* --------------------------------------------------------------------------
  *                               Configuration
