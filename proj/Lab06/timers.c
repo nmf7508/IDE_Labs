@@ -88,6 +88,22 @@ void TIMG6_init(uint32_t period, uint32_t prescaler) {
     TIMG6->COMMONREGS.CPS = prescaler;
     TIMG6->COUNTERREGS.LOAD = period;
     TIMG6->COMMONREGS.CCLKCTL |= GPTIMER_CCLKCTL_CLKEN_ENABLED;
+		
+		// Enable and configure GPIOA peripheral if not already active
+    if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
+        GPIOA->GPRCM.RSTCTL = GPIO_RSTCTL_KEY_UNLOCK_W | GPIO_RSTCTL_RESETASSERT_ASSERT;
+        GPIOA->GPRCM.RSTCTL &= ~GPIO_RSTCTL_KEY_UNLOCK_W;
+        GPIOA->GPRCM.PWREN = GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE;
+        GPIOA->GPRCM.PWREN &= ~GPIO_PWREN_KEY_UNLOCK_W;
+    }
+
+    // Configure PA28 as output (no input, no inversion)
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM3] |= (0x80 | 0x01);
+    IOMUX->SECCFG.PINCM[IOMUX_PINCM3] &= ~IOMUX_PINCM_INENA_ENABLE;
+
+    // Enable Timer6 (starts integration timing) and PA28 output
+    TIMG6->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+    GPIOA->DOESET31_0 |= (1 << 28);
 
     __disable_irq();
     TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;

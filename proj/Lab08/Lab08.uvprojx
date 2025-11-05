@@ -449,16 +449,6 @@
               <FilePath>..\..\lib\lab5\adc12.h</FilePath>
             </File>
             <File>
-              <FileName>camera.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Lab05\camera.c</FilePath>
-            </File>
-            <File>
-              <FileName>camera.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\lib\lab5\camera.h</FilePath>
-            </File>
-            <File>
               <FileName>switches.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\lib\lab1\switches.c</FilePath>
