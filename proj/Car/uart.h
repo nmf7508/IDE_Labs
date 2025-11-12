@@ -72,5 +72,10 @@ void UART1_put(char *ptr_str);
 */
 int UART1_isDataAvailable(void);
 
+/**
+ * @brief Initialize UART1 to trigger an interrupt on receive.
+*/
+void UART1_init_interrupt(void);
+
 
 #endif // _UART_H_

@@ -2,29 +2,6 @@
  ******************************************************************************
  * @file     isrs.c
  * @brief    Interrupt Service Routines (ISRs) for the MSPM0 microcontroller.
- * @details  
- * This file implements interrupt handlers for hardware-triggered events
- * including GPIO interrupts, timer overflows, and ADC conversions.
- *
- * The behavior of each ISR is determined by the `MODE` macro, which enables
- * flexible use of the same interrupt architecture across multiple labs:
- *
- * | MODE | Functionality Description |
- * |------|----------------------------|
- * | 0 | Stopwatch/timing demonstration using timers and UART |
- * | 1 | Periodic ADC sampling with UART output |
- * | 2 | Temperature sensor sampling and unit conversion |
- * | 3 | Line-scan camera capture sequence with synchronized CLK and SI |
- *
- * Each ISR ensures interrupt flags are cleared, system timing remains
- * synchronized, and peripheral-specific behavior is executed based on the
- * current lab mode.
- *
- * @authors
- * Nick Fair  
- * Nathan Winiarski
- *
- * @date     October 7, 2025
  ******************************************************************************
  */
 
@@ -37,7 +14,8 @@
 #include "camera.h"
 #include "timers.h"
 #include <stdio.h>
-#include <stdbool.h> // <-- You may need to add this include
+#include <stdbool.h>
+#include "DCMotors.h"
 
 /* --------------------------------------------------------------------------
  * Global Variables and Flags
@@ -52,7 +30,11 @@ volatile uint8_t cameraData_complete = 0; /**< Set to 1 when a full camera line 
 volatile int pixelCounter = 0;            /**< Counts CLK pulses for pixel sampling (includes dummy cycles). */
 uint16_t cameraData[128];                 /**< Storage buffer for one 128-pixel line. */
 volatile int delayOver = 0;               /**< Delay completion flag, used for timer-driven events. */
-volatile bool g_car_running = false;      /**< ADD THIS LINE: Flag to start the car from main() */
+
+// --- Global Flags for Bluetooth Control ---
+volatile bool g_car_running = false;
+volatile bool g_debug_mode = false;     // Shared with main.c, toggled by S2 or 't'
+volatile double g_Kp = 0.6;             // Initial Kp value, shared with main.c
 
 #if MODE == 3
 static bool read;                         /**< Toggles between read and idle states for camera CLK synchronization. */
@@ -60,58 +42,36 @@ static bool read;                         /**< Toggles between read and idle sta
 
 
 /* --------------------------------------------------------------------------
- * CPUSS Group 1 Interrupt Handler
+ * GPIOA Interrupt Handler (S1 Button)
  * -------------------------------------------------------------------------- */
 
 /**
- * @brief Handles Group 1 interrupts (external interrupt sources).
- * @details  
- * This ISR manages user input (e.g., push buttons) or GPIO-triggered
- * interrupts associated with Group 1.
- *
- * Behavior varies based on `MODE`:
- * - MODE 0: Toggles stopwatch start/stop and displays elapsed time.
- * - MODE 1–2: Toggles timer and LED1 for visual debugging.
+ * @brief Handles GPIOA interrupts (S1 - PA18).
  */
-void GROUP1_IRQHandler(void) {
-    switch (CPUSS->INT_GROUP[1].IIDX) {
-        case 1: // External Interrupt 0 (e.g., Button S1)
-            CPUSS->INT_GROUP[1].ICLR |= CPUSS_INT_GROUP_ICLR_INT_INT0;
+void GPIOA_IRQHandler(void) {
+    // Check if the interrupt is from S1 (PA18)
+    if (GPIOA->CPU_INT.RIS & GPIO_GEN_EVENT1_RIS_DIO18_SET) {
+        // Clear the interrupt flag
+        GPIOA->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO18_CLR;
+        
+        g_car_running = true; // Set the flag for main()
+    }
+}
 
-            g_car_running = true; // ADD THIS LINE: Set the flag for main()
+/* --------------------------------------------------------------------------
+ * GPIOB Interrupt Handler (S2 Button)
+ * -------------------------------------------------------------------------- */
 
-#if MODE == 0 || MODE == 1 || MODE == 2
-            // Toggle Timer 6 enable state and LED1 for visual feedback
-            TIMG6->COUNTERREGS.CTRCTL ^= GPTIMER_CTRCTL_EN_ENABLED;
-            LED1_set(LED1_TOGGLE);
-#endif
-            break;
-
-        case 2: // External Interrupt 1 (e.g., Button S2)
-            CPUSS->INT_GROUP[1].ICLR |= CPUSS_INT_GROUP_ICLR_INT_INT1;
-
-#if MODE == 0
-            // Stopwatch control (Timer12 toggled on/off)
-            TIMG12->COUNTERREGS.CTRCTL ^= GPTIMER_CTRCTL_EN_ENABLED;
-
-            if (timerOn) {
-                // Stop stopwatch and print elapsed time
-                LED2_set(0);
-                timerOn = 0;
-                char str[20];
-                sprintf(str, "%ld", timeElapsed);
-                UART0_put((uint8_t*)str);
-                UART0_put((uint8_t*)" ms\r\n");
-                timeElapsed = 0;
-            } else {
-                // Start stopwatch
-                timerOn = 1;
-            }
-#endif
-            break;
-
-        default:
-            break;
+/**
+ * @brief Handles GPIOB interrupts (S2 - PB21).
+ */
+void GPIOB_IRQHandler(void) {
+    // Check if the interrupt is from S2 (PB21)
+    if (GPIOB->CPU_INT.RIS & GPIO_GEN_EVENT1_RIS_DIO21_SET) {
+        // Clear the interrupt flag
+        GPIOB->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO21_CLR;
+        
+        g_debug_mode = !g_debug_mode; // Toggle the debug flag
     }
 }
 
@@ -119,18 +79,6 @@ void GROUP1_IRQHandler(void) {
 /* --------------------------------------------------------------------------
  * Timer 0 Interrupt Handler (Camera CLK)
  * -------------------------------------------------------------------------- */
-
-/**
- * @brief Timer 0 ISR — manages the camera pixel clock (CLK) signal.
- * @details  
- * Used in MODE 3 for line-scan camera synchronization.
- * Each interrupt corresponds to a CLK pulse, and ADC samples are collected
- * after the appropriate number of dummy cycles.
- *
- * - Generates 128 valid pixel reads after 18 dummy cycles.
- * - Stops CLK and raises the `cameraData_complete` flag once done.
- * - Toggles `read` to alternate between clock edges.
- */
 void TIMG0_IRQHandler(void) {
     // Clear interrupt flag
     TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
@@ -172,15 +120,6 @@ void TIMG0_IRQHandler(void) {
 /* --------------------------------------------------------------------------
  * Timer 6 Interrupt Handler
  * -------------------------------------------------------------------------- */
-
-/**
- * @brief Timer 6 ISR — performs periodic tasks based on `MODE`.
- * @details
- * - MODE 0: Toggles LED1 periodically (time demo).
- * - MODE 1: Samples ADC and prints raw value.
- * - MODE 2: Samples temperature sensor, converts to °C/°F, prints via UART.
- * - MODE 3: Generates camera "Start Integration" (SI) pulse and enables CLK timer.
- */
 void TIMG6_IRQHandler(void) {
     TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 
@@ -217,13 +156,6 @@ void TIMG6_IRQHandler(void) {
 /* --------------------------------------------------------------------------
  * Timer 12 Interrupt Handler
  * -------------------------------------------------------------------------- */
-
-/**
- * @brief Timer 12 ISR — stopwatch time tracking (MODE 0).
- * @details  
- * Increments an elapsed time counter and cycles LED2 indicators
- * every 500 ms to visualize time progression.
- */
 void TIMG12_IRQHandler(void) {
     TIMG12->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 
@@ -234,4 +166,42 @@ void TIMG12_IRQHandler(void) {
     }
     timeElapsed++; // Increment time counter (ms)
 #endif
+}
+
+/* --------------------------------------------------------------------------
+ * UART1 Interrupt Handler (Bluetooth Commands)
+ * -------------------------------------------------------------------------- */
+void UART1_IRQHandler(void) {
+    // Check if the interrupt is a Receive Interrupt
+    if (UART1->CPU_INT.RIS & UART_CPU_INT_RIS_RXINT_SET) {
+        // Clear the receive interrupt flag
+        UART1->CPU_INT.ICLR = UART_CPU_INT_ICLR_RXINT_CLR;
+
+        // Read the character from the data register
+        char cmd = (char)(UART1->RXDATA & UART_RXDATA_DATA_MASK);
+
+        switch (cmd) {
+            case 's': // STOP (Kill Command)
+                g_car_running = false;
+                Motor_Stop(); // Call Motor_Stop() immediately
+                break;
+                
+            case 'g': // GO (Resume)
+                g_car_running = true;
+                break;
+                
+            case 't': // TOGGLE Debug
+                g_debug_mode = !g_debug_mode;
+                break;
+                
+            case 'p': // Kp UP
+                g_Kp += 0.05;
+                break;
+                
+            case 'o': // Kp DOWN (can't use 'p-')
+                g_Kp -= 0.05;
+                if (g_Kp < 0) g_Kp = 0; // Don't allow negative Kp
+                break;
+        }
+    }
 }

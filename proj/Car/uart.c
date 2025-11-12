@@ -203,3 +203,15 @@ void UART1_put(char *ptr_str) {
 		UART1_putchar('\n');
 		UART1_putchar('\r');
 }
+
+void UART1_init_interrupt(void) {
+    // Assumes UART1_init() has already been called.
+
+    // Enable the RX interrupt in the UART module
+    UART1->CPU_INT.IMASK |= UART_CPU_INT_IMASK_RXINT_SET;
+    
+    // Enable UART1 interrupt in the NVIC
+    __disable_irq();
+    NVIC_EnableIRQ(UART1_INT_IRQn);
+    __enable_irq();
+}

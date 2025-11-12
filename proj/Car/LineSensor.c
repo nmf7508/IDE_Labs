@@ -1,56 +1,84 @@
 #include "LineSensor.h"
 
 // --- TUNING PARAMETERS ---
-// Your ADC is 12-bit (0-4095). A dark surface (the line)
-// reflects less light, so the sensor voltage is HIGH.
-// You will need to tune this value.
-#define LINE_THRESHOLD 3000
+// We no longer need a fixed LINE_THRESHOLD.
 
-// For Demo 1, "mostly-dark" means carpet.
-// If more than ~85% of pixels are "dark", we are on the carpet.
-// (128 pixels * 0.85) approx 110. Tune this as needed.
+// This is a new "sensitivity" check. If the difference between the
+// darkest and lightest pixel is less than this, we'll assume we're
+// on a uniform surface (all carpet or all track) and are "lost".
+#define MINIMUM_LINE_RANGE 500
+
+// We still use this to decide if we're on carpet, but it will
+// now be compared against the *dynamic* threshold.
 #define CARPET_PIXEL_COUNT 110
 // --- END TUNING ---
 
 /**
- * @brief Calculates line position using a weighted average.
- * This will give a "slow and wobbly" result, perfect for Demo 1.
+ * @brief Calculates line position using a dynamic threshold and weighted average.
  */
 int32_t LineSensor_Calculate_Error(uint16_t* sensorValues) {
     long weighted_sum = 0; // Stores (value * position)
     long pixel_sum = 0;    // Stores sum of all sensor values
     int pixels_on_line = 0;
     
+    // --- 1. Find Min/Max and Calculate Dynamic Threshold ---
+    uint16_t min_val = 4095;
+    uint16_t max_val = 0;
+    
+    for (int i = 0; i < 128; i++) {
+        if (sensorValues[i] < min_val) min_val = sensorValues[i];
+        if (sensorValues[i] > max_val) max_val = sensorValues[i];
+    }
+
+    // Check if we even see a line (is there enough contrast?)
+    if ((max_val - min_val) < MINIMUM_LINE_RANGE) {
+        return 0; // We are "lost" or on a uniform surface, go straight.
+    }
+
+    // Calculate the dynamic threshold
+    uint16_t dynamic_threshold = (min_val + max_val) / 2;
+
+    // --- 2. Calculate Weighted Average using the new threshold ---
     for (int i = 0; i < 128; i++) {
         uint16_t val = sensorValues[i];
         
-        // Only include pixels that are "dark enough"
-        if (val > LINE_THRESHOLD) {
-            // This is a weighted average.
-            // A pixel at index 0 is -64 from center.
-            // A pixel at index 127 is +63 from center.
-            // We use (i - 64) as the "weight" for the position.
+        // Use the new dynamic threshold
+        if (val > dynamic_threshold) {
+            // (i - 64) gives a position error from the center
             weighted_sum += (long)val * (i - 64);
             pixel_sum += val;
             pixels_on_line++;
         }
     }
 
-    // If no pixels see the line, we're lost. Go straight.
     if (pixels_on_line == 0 || pixel_sum == 0) {
-        return 0; 
+        return 0; // Lost line
     }
 
-    // The result is the weighted average of the error.
-    // e.g., if the line is on the right, weighted_sum will be positive.
-    // if on the left, it will be negative.
     return weighted_sum / pixel_sum;
 }
 
+/**
+ * @brief Checks if the camera sees "mostly-dark" carpet.
+ * This now also uses the dynamic threshold.
+ */
 bool LineSensor_Detect_Carpet(uint16_t* sensorValues) {
     int dark_pixel_count = 0;
+
+    // --- 1. Find Min/Max and Calculate Dynamic Threshold ---
+    uint16_t min_val = 4095;
+    uint16_t max_val = 0;
+    
     for (int i = 0; i < 128; i++) {
-        if (sensorValues[i] > LINE_THRESHOLD) {
+        if (sensorValues[i] < min_val) min_val = sensorValues[i];
+        if (sensorValues[i] > max_val) max_val = sensorValues[i];
+    }
+    
+    uint16_t dynamic_threshold = (min_val + max_val) / 2;
+
+    // --- 2. Count "dark" pixels based on the dynamic threshold ---
+    for (int i = 0; i < 128; i++) {
+        if (sensorValues[i] > dynamic_threshold) {
             dark_pixel_count++;
         }
     }

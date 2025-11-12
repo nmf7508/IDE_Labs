@@ -2,52 +2,38 @@
  * ******************************************************************************
  * @file     isrs.h
  * @brief    Interrupt Service Routine (ISR) header definitions.
- * @details
- * This header declares the interrupt handler prototypes used in the MSPM0
- * microcontroller project. These routines handle events from GPIO, timers,
- * and ADC peripherals. The active behavior of each ISR depends on the selected
- * operating mode defined by the `MODE` macro:
- *
- * - MODE 0: Stopwatch and timing demonstration using timers and UART output.
- * - MODE 1: Light sensor mode – periodic ADC sampling with UART transmission.
- * - MODE 2: Temperature sensor mode – ADC temperature data acquisition
- * and conversion to °C and °F.
- * - MODE 3: Camera mode – synchronized ADC sampling for line capture using
- * timer-generated SI and CLK signals.
- *
- * Each interrupt handler defined in `isrs.c` responds to hardware-triggered
- * events, clears interrupt flags, and manages control logic for Lab 6 tasks.
- *
- * @authors
- * Nick Fair  
- * Nathan Winiarski
- *
- * @date 10/07/2025
- * ******************************************************************************
+ ******************************************************************************
  */
 
 #ifndef _ISRS_H_
 #define _ISRS_H_
 
+#include <stdbool.h> // Make sure this is present
+
+// --- Global Flags for Bluetooth Control ---
+extern volatile bool g_car_running;     // true = car moves, false = car stops
+extern volatile bool g_debug_mode;      // true = print debug data over UART1
+extern volatile double g_Kp;            // For on-the-fly tuning
+// ---
+
 /**
  * @brief Selects which Lab 6 mode the ISR logic operates under.
- *
- * - 0 -> Stopwatch / Part 1 demonstration  
- * - 1 -> Light Sensor (ADC periodic sampling)  
- * - 2 -> Temperature Sensor (ADC conversion)  
- * - 3 -> Camera Capture (synchronized sampling)
  */
-#define MODE 3  /* <<< THIS LINE IS CHANGED FROM 0 TO 3 */
+#define MODE 3  // 3 -> Camera Capture (synchronized sampling)
 
 // -----------------------------------------------------------------------------
 // Function Prototypes
 // -----------------------------------------------------------------------------
 
 /**
- * @brief Handles Group 1 interrupts (e.g., external GPIO events).
- * @details Used to toggle timers and LEDs or trigger UART output depending on MODE.
+ * @brief Handles GPIOA interrupts (S1 - PA18).
  */
-void GROUP1_IRQHandler(void);
+void GPIOA_IRQHandler(void);
+
+/**
+ * @brief Handles GPIOB interrupts (S2 - PB21).
+ */
+void GPIOB_IRQHandler(void);
 
 /**
  * @brief Timer0 interrupt handler.
@@ -57,8 +43,7 @@ void TIMG0_IRQHandler(void);
 
 /**
  * @brief Timer6 interrupt handler.
- * @details Handles periodic timing for ADC sampling, temperature conversion,
- * or camera SI pulse generation.
+ * @details Handles periodic timing for camera SI pulse generation.
  */
 void TIMG6_IRQHandler(void);
 
@@ -67,5 +52,11 @@ void TIMG6_IRQHandler(void);
  * @details Tracks elapsed time for stopwatch function (MODE 0).
  */
 void TIMG12_IRQHandler(void);
+
+/**
+ * @brief UART1 interrupt handler.
+ * @details Handles commands from the Bluetooth module.
+ */
+void UART1_IRQHandler(void);
 
 #endif /* _ISRS_H_ */
