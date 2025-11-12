@@ -10,7 +10,7 @@
 */
 
 #include <ti\devices\msp\msp.h>
-#include "lab1\leds.h"
+#include "leds.h"
 
 /**
  * Reset and initialize power for LED 1 if not done already

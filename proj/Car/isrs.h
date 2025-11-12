@@ -16,11 +16,6 @@ extern volatile bool g_debug_mode;      // true = print debug data over UART1
 extern volatile double g_Kp;            // For on-the-fly tuning
 // ---
 
-/**
- * @brief Selects which Lab 6 mode the ISR logic operates under.
- */
-#define MODE 3  // 3 -> Camera Capture (synchronized sampling)
-
 // -----------------------------------------------------------------------------
 // Function Prototypes
 // -----------------------------------------------------------------------------
@@ -28,12 +23,7 @@ extern volatile double g_Kp;            // For on-the-fly tuning
 /**
  * @brief Handles GPIOA interrupts (S1 - PA18).
  */
-void GPIOA_IRQHandler(void);
-
-/**
- * @brief Handles GPIOB interrupts (S2 - PB21).
- */
-void GPIOB_IRQHandler(void);
+void GROUP1_IRQHandler(void);
 
 /**
  * @brief Timer0 interrupt handler.

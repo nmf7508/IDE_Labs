@@ -104,10 +104,10 @@ void S1_init_interrupt(void) {
 
     S1_init();  // Initialize switch hardware
 
-    // Clear and enable DIO18 interrupt (falling edge)
+    // Clear and enable DIO18 interrupt (Rising edge)
     GPIOA->CPU_INT.ICLR |= GPIO_GEN_EVENT1_ICLR_DIO18_CLR;
     GPIOA->CPU_INT.IMASK |= GPIO_GEN_EVENT1_IMASK_DIO18_SET;
-    GPIOA->POLARITY31_16 |= GPIO_POLARITY31_16_DIO18_FALL;
+    GPIOA->POLARITY31_16 |= GPIO_POLARITY31_16_DIO18_RISE;
 
     // Enable interrupt in NVIC
     NVIC_EnableIRQ(GPIOA_INT_IRQn);

@@ -6,11 +6,11 @@
 // This is a new "sensitivity" check. If the difference between the
 // darkest and lightest pixel is less than this, we'll assume we're
 // on a uniform surface (all carpet or all track) and are "lost".
-#define MINIMUM_LINE_RANGE 500
+#define MINIMUM_LINE_RANGE 1000
 
 // We still use this to decide if we're on carpet, but it will
 // now be compared against the *dynamic* threshold.
-#define CARPET_PIXEL_COUNT 110
+#define CARPET_PIXEL_COUNT 500
 // --- END TUNING ---
 
 /**

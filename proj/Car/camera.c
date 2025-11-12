@@ -112,6 +112,7 @@ void Camera_init(void) {
 
     // Ensure CLK is disabled until first SI pulse starts capture
     TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;
+		TIMG6->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 }
 
 
