@@ -1,52 +1,32 @@
 /**
- * ******************************************************************************
- * @file     isrs.h
- * @brief    Interrupt Service Routine (ISR) header definitions.
- ******************************************************************************
+ * @file    isrs.h
+ * @brief   ISRs for Servo Range Test
  */
 
 #ifndef _ISRS_H_
 #define _ISRS_H_
 
-#include <stdbool.h> // Make sure this is present
+#include <stdbool.h>
+#include <stdint.h>
 
-// --- Global Flags for Bluetooth Control ---
-extern volatile bool g_car_running;     // true = car moves, false = car stops
-extern volatile bool g_debug_mode;      // true = print debug data over UART1
-extern volatile double g_Kp;            // For on-the-fly tuning
-// ---
+// Global variable to hold the current duty cycle
+extern volatile bool g_car_running;
+extern volatile bool g_debug_mode;
+extern volatile double g_Steer_Correction; // Steering: -1.0 (L) to 1.0 (R)
+extern volatile int16_t g_Drive_Speed;     // Drive speed: -50 to 50
+extern volatile uint32_t g_integration_time;
+extern volatile bool g_auto_exposure;
+
+// Set MODE to 0 (or any non-3 value) to disable camera interrupts
+#define MODE 0
 
 // -----------------------------------------------------------------------------
 // Function Prototypes
 // -----------------------------------------------------------------------------
-
-/**
- * @brief Handles GPIOA interrupts (S1 - PA18).
- */
-void GROUP1_IRQHandler(void);
-
-/**
- * @brief Timer0 interrupt handler.
- * @details Generates camera CLK signal and reads ADC pixel data (MODE 3).
- */
-void TIMG0_IRQHandler(void);
-
-/**
- * @brief Timer6 interrupt handler.
- * @details Handles periodic timing for camera SI pulse generation.
- */
-void TIMG6_IRQHandler(void);
-
-/**
- * @brief Timer12 interrupt-handler.
- * @details Tracks elapsed time for stopwatch function (MODE 0).
- */
-void TIMG12_IRQHandler(void);
-
-/**
- * @brief UART1 interrupt handler.
- * @details Handles commands from the Bluetooth module.
- */
-void UART1_IRQHandler(void);
+void GROUP1_IRQHandler(void); // For S1
+void UART1_IRQHandler(void); // Unused, but good to have
+void TIMG0_IRQHandler(void); // Unused
+void TIMG6_IRQHandler(void); // Unused
+void TIMG12_IRQHandler(void); // Unused
 
 #endif /* _ISRS_H_ */

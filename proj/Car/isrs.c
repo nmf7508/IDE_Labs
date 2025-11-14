@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * @file     isrs.c
- * @brief    Interrupt Service Routines (ISRs) for the MSPM0 microcontroller.
+ * @brief    Interrupt Service Routines (ISRs) for Car Project (Servo Steer)
  ******************************************************************************
  */
 
@@ -15,30 +15,29 @@
 #include "timers.h"
 #include <stdio.h>
 #include <stdbool.h>
-#include "DCMotors.h"
+#include "motor.h"
+#include "servo.h" 
 
 /* --------------------------------------------------------------------------
  * Global Variables and Flags
  * -------------------------------------------------------------------------- */
 
-volatile uint8_t cameraData_complete = 0; /**< Set to 1 when a full camera line is captured. */
-volatile int pixelCounter = 0;            /**< Counts CLK pulses for pixel sampling (includes dummy cycles). */
-uint16_t cameraData[128];                 /**< Storage buffer for one 128-pixel line. */
-volatile int delayOver = 0;               /**< Delay completion flag, used for timer-driven events. */
+volatile uint8_t cameraData_complete = 0;
+volatile int pixelCounter = 0;
+uint16_t cameraData[128];
+volatile int delayOver = 0;
 
-// --- Global Flags for Bluetooth Control ---
+// --- Global Flags for Car Control ---
 volatile bool g_car_running = false;
-volatile bool g_debug_mode = false;     // Shared with main.c, toggled by S2 or 't'
-volatile double g_Kp = 0.6;             // Initial Kp value, shared with main.c
+volatile bool g_debug_mode = false;
+volatile double g_Steer_Correction = 0.0; // Steering: -1.0 (L) to 1.0 (R)
+volatile int16_t g_Drive_Speed = 30;     // Drive speed: -50 to 50
+volatile uint32_t g_integration_time = 100;
+volatile bool g_auto_exposure = true;
 
-static bool read;                         /**< Toggles between read and idle states for camera CLK synchronization. */
-
-
-/* --------------------------------------------------------------------------
- * GPIOA Interrupt Handler (S1 Button)
- * -------------------------------------------------------------------------- */
-
-/**
+static bool read;
+ 
+ /**
  * @brief Handles GPIOA interrupts (S1 - PA18).
  */
 void GROUP1_IRQHandler(void) {
@@ -46,10 +45,14 @@ void GROUP1_IRQHandler(void) {
 		case 1:
 				GPIOA->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO18_CLR;
         
-        g_car_running = true; // Set the flag for main()
+				g_car_running = true; // Set the flag for main()
+
 			break;
 		case 2:
-			
+			GPIOB->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO21_CLR;
+				
+			g_debug_mode = !g_debug_mode; // Toggle the debug flag
+		
 		break;
 		default:
 			break;
@@ -60,34 +63,26 @@ void GROUP1_IRQHandler(void) {
  * Timer 0 Interrupt Handler (Camera CLK)
  * -------------------------------------------------------------------------- */
 void TIMG0_IRQHandler(void) {
-    // Clear interrupt flag
     TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-    // Toggle GPIO pin for CLK output or debug observation
+	
+    // Toggle GPIO pin for CLK output
     GPIOA->DOUTTGL31_0 |= (1 << 12);
 
-    // First clock edge after SI pulse — ensure SI is pulled low
-    if (pixelCounter == 1) {
-        GPIOA->DOUTCLR31_0 |= (1 << 28);
+    if (pixelCounter == 1) { // First clock edge after SI
+        GPIOA->DOUTCLR31_0 |= (1 << 28); // Pull SI low
     }
 
     if (read) {
         pixelCounter++;
-
-        // Skip first 18 dummy cycles
         if (pixelCounter > 18 && pixelCounter <= (18 + 128)) {
-            int idx = pixelCounter - 19;
-            cameraData[idx] = (uint16_t)ADC0_getVal();
+            cameraData[pixelCounter - 19] = (uint16_t)ADC0_getVal();
         }
-
-        // All 128 pixels captured
         if (pixelCounter >= (18 + 128)) {
-            cameraData_complete = 1;  // Mark frame complete
+            cameraData_complete = 1;
             pixelCounter = 0;
             TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED; // Stop CLK
         }
     }
-
-    // Alternate read state between rising/falling clock edges
     read = !read;
 }
 
@@ -97,58 +92,90 @@ void TIMG0_IRQHandler(void) {
  * -------------------------------------------------------------------------- */
 void TIMG6_IRQHandler(void) {
     TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-	
-    // Generate SI pulse and start camera frame capture
+
     if (!cameraData_complete) {
         GPIOA->DOUTSET31_0 = (1 << 28);   // SI high
         pixelCounter = 0;               // Reset counter
         TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED; // Enable CLK
     }
-    read = 1; // Set to ensure first CLK edge captures data
+    read = 1;
 }
 
 
 /* --------------------------------------------------------------------------
- * Timer 12 Interrupt Handler
+ * Timer 12 Interrupt Handler (Unused)
  * -------------------------------------------------------------------------- */
 void TIMG12_IRQHandler(void) {
     TIMG12->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-
 }
 
 /* --------------------------------------------------------------------------
  * UART1 Interrupt Handler (Bluetooth Commands)
  * -------------------------------------------------------------------------- */
 void UART1_IRQHandler(void) {
-    // Check if the interrupt is a Receive Interrupt
     if (UART1->CPU_INT.RIS & UART_CPU_INT_RIS_RXINT_SET) {
-        // Clear the receive interrupt flag
-        UART1->CPU_INT.ICLR = UART_CPU_INT_ICLR_RXINT_CLR; // <-- Correct flag
-
-        // Read the character from the data register
+        UART1->CPU_INT.ICLR = UART_CPU_INT_ICLR_RXINT_CLR;
         char cmd = (char)(UART1->RXDATA & UART_RXDATA_DATA_MASK);
 
         switch (cmd) {
-            case 's': // STOP (Kill Command)
-                g_car_running = false;
-                Motor_Stop(); // Call Motor_Stop() immediately
-                break;
-                
-            case 'g': // GO (Resume)
+            // --- System Commands ---
+            case 'g': // GO (Start line following)
                 g_car_running = true;
+                Motor_Set_Speed(g_Drive_Speed); // Start motors
                 break;
-                
-            case 't': // TOGGLE Debug
+            case 's': // STOP (Kill)
+                g_car_running = false;
+                Motor_Stop();
+                break;
+            case 't': // Toggle Debug
                 g_debug_mode = !g_debug_mode;
                 break;
-                
-            case 'p': // Kp UP
-                g_Kp += 0.05;
+
+            // --- Manual Drive Commands ---
+            case 'w': // Set drive speed FORWARD
+                g_Drive_Speed = 30;
+                if(g_car_running) Motor_Set_Speed(g_Drive_Speed);
                 break;
-                
-            case 'o': // Kp DOWN (can't use 'p-')
-                g_Kp -= 0.05;
-                if (g_Kp < 0) g_Kp = 0; // Don't allow negative Kp
+            case 'z': // Set drive speed BACKWARD
+                g_Drive_Speed = -30;
+                if(g_car_running) Motor_Set_Speed(g_Drive_Speed);
+                break;
+            case 'x': // Set drive speed STOP
+                g_Drive_Speed = 0;
+                Motor_Stop();
+                break;
+
+            // --- Manual Steering Commands ---
+            case 'a': // Steer Left
+                g_Steer_Correction -= 0.1;
+                if (g_Steer_Correction < -1.0) g_Steer_Correction = -1.0;
+                SteeringServo_Set_Turn(g_Steer_Correction); // Apply turn
+                break;
+            case 'd': // Steer Right
+                g_Steer_Correction += 0.1;
+                if (g_Steer_Correction > 1.0) g_Steer_Correction = 1.0;
+                SteeringServo_Set_Turn(g_Steer_Correction); // Apply turn
+                break;
+            case 'c': // Center Steer
+                g_Steer_Correction = 0.0;
+                SteeringServo_Set_Turn(g_Steer_Correction); // Apply turn
+                break;
+
+            // --- Exposure Commands ---
+            case 'e': // Toggle Auto-Exposure
+                g_auto_exposure = !g_auto_exposure;
+                break;
+            case 'i': // Exposure Up (Manual)
+                g_auto_exposure = false;
+                g_integration_time += 10;
+                TIMG6->COUNTERREGS.LOAD = g_integration_time;
+                break;
+            case 'k': // Exposure Down (Manual)
+                g_auto_exposure = false;
+                if (g_integration_time > 10) {
+                    g_integration_time -= 10;
+                    TIMG6->COUNTERREGS.LOAD = g_integration_time;
+                }
                 break;
         }
     }

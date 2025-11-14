@@ -409,16 +409,6 @@
               <FilePath>.\isrs.h</FilePath>
             </File>
             <File>
-              <FileName>DCMotors.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\DCMotors.c</FilePath>
-            </File>
-            <File>
-              <FileName>DCMotors.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\DCMotors.h</FilePath>
-            </File>
-            <File>
               <FileName>LineSensor.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\LineSensor.c</FilePath>
@@ -527,6 +517,26 @@
               <FileName>leds.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\leds.h</FilePath>
+            </File>
+            <File>
+              <FileName>motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\motor.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\motor.h</FilePath>
+            </File>
+            <File>
+              <FileName>servo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\servo.c</FilePath>
+            </File>
+            <File>
+              <FileName>servo.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\servo.h</FilePath>
             </File>
           </Files>
         </Group>
