@@ -1,5 +1,6 @@
 #include "DCMotors.h"
 #include "timers.h" // Use your existing timer driver path
+#include <ti/devices/msp/msp.h>
 
 #define PWM_PERIOD 400  // From your previous lab's main.c
 #define MAX_SPEED 50    // Project rule [cite: 21]
@@ -19,6 +20,20 @@ void Motor_Init(void) {
     TIMA0_PWM_init(1, PWM_PERIOD, 0, 0); // Left Motor (AIN2)
     TIMA0_PWM_init(2, PWM_PERIOD, 0, 0); // Right Motor (BIN1)
     TIMA0_PWM_init(3, PWM_PERIOD, 0, 0); // Right Motor (BIN2)
+	
+		//Set peripheral connected and configure PF for GPIO
+		IOMUX->SECCFG.PINCM[IOMUX_PINCM45] |= (0x80 | 0x01);
+		//Clear input enable bit, and invert output logic
+		IOMUX->SECCFG.PINCM[IOMUX_PINCM45] &= ~IOMUX_PINCM_INENA_ENABLE;
+		IOMUX->SECCFG.PINCM[IOMUX_PINCM45] |= IOMUX_PINCM_INV_ENABLE;
+		GPIOB->DOESET31_0 |= (1 << 19);
+			
+		//Set peripheral connected and configure PF for GPIO
+		IOMUX->SECCFG.PINCM[IOMUX_PINCM47] |= (0x80 | 0x01);
+		//Clear input enable bit, and invert output logic
+		IOMUX->SECCFG.PINCM[IOMUX_PINCM47] &= ~IOMUX_PINCM_INENA_ENABLE;
+		IOMUX->SECCFG.PINCM[IOMUX_PINCM47] |= IOMUX_PINCM_INV_ENABLE;
+		GPIOA->DOESET31_0 |= (1 << 22);
 }
 
 void Motor_Stop(void) {
