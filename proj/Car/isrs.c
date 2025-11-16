@@ -32,8 +32,7 @@ volatile bool g_car_running = false;
 volatile bool g_debug_mode = false;
 volatile double g_Steer_Correction = 0.0; // Steering: -1.0 (L) to 1.0 (R)
 volatile int16_t g_Drive_Speed = 30;     // Drive speed: -50 to 50
-volatile uint32_t g_integration_time = 100;
-volatile bool g_auto_exposure = true;
+volatile uint32_t g_integration_time = 75;
 
 static bool read;
  
@@ -159,23 +158,6 @@ void UART1_IRQHandler(void) {
             case 'c': // Center Steer
                 g_Steer_Correction = 0.0;
                 SteeringServo_Set_Turn(g_Steer_Correction); // Apply turn
-                break;
-
-            // --- Exposure Commands ---
-            case 'e': // Toggle Auto-Exposure
-                g_auto_exposure = !g_auto_exposure;
-                break;
-            case 'i': // Exposure Up (Manual)
-                g_auto_exposure = false;
-                g_integration_time += 10;
-                TIMG6->COUNTERREGS.LOAD = g_integration_time;
-                break;
-            case 'k': // Exposure Down (Manual)
-                g_auto_exposure = false;
-                if (g_integration_time > 10) {
-                    g_integration_time -= 10;
-                    TIMG6->COUNTERREGS.LOAD = g_integration_time;
-                }
                 break;
         }
     }
