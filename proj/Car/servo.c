@@ -30,7 +30,7 @@ void SteeringServo_Set_Turn(double correction) {
     correction = clamp(correction, -1.0, 1.0);
 
     // Map the correction value to the servo's duty cycle range
-    double duty_cycle = SERVO_CENTER + (correction * (SERVO_RIGHT - SERVO_CENTER));
+    double duty_cycle = SERVO_CENTER + (correction * (SERVO_LEFT - SERVO_CENTER));
     
     // Clamp to ensure we don't exceed servo limits
     duty_cycle = clamp(duty_cycle, SERVO_LEFT, SERVO_RIGHT);

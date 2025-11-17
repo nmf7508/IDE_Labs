@@ -89,3 +89,22 @@ void UART0_printFloat(double num) {
         fractionalPart -= (int) fractionalPart;
     }
 }
+
+void UART1_printFloat(double num) {
+    if (num < 0) {
+        UART0_putchar('-');
+        num = -num;
+    }
+    int integerPart = (int) num;
+    double fractionalPart = num - integerPart;
+
+    UART1_printDec(integerPart);
+    UART1_putchar('.');
+
+    int precision = 0;
+    while (fractionalPart > 1e-6 && precision++ < 6) {
+        fractionalPart *= 10;
+        UART1_putchar((char) ('0' + (int) fractionalPart));
+        fractionalPart -= (int) fractionalPart;
+    }
+}

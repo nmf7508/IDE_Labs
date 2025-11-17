@@ -36,13 +36,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define NUM_PIXELS            128
 #define CENTER_DEADBAND_PIXELS  3    // |error| <= 3 pixels = "centered"
+#define NUM_PIXELS 128
+#define MINIMUM_LINE_RANGE 2000   // tune for your environment
 
 // You already have this somewhere, just keep using it:
-#ifndef MINIMUM_LINE_RANGE
-#define MINIMUM_LINE_RANGE    50     // example; tune for your contrast
-#endif
 
 	/**
 	 * @brief Initialize the pixel clock (CLK) output on PA12.
@@ -190,6 +188,59 @@ int32_t LineSensor_Calculate_Error(uint16_t* sensorValues) {
 	return (left > (128-right)) ? -1:1;
 }
 */
+/*
+double LineSensor_Calculate_Error(uint16_t *sensorValues)
+{
+    // --- 1. Find Min/Max for dynamic threshold ---
+    uint16_t min_val = 4095;
+    uint16_t max_val = 0;
+
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        uint16_t v = sensorValues[i];
+        if (v < min_val) min_val = v;
+        if (v > max_val) max_val = v;
+    }
+
+    // Not enough contrast ? treat as centered
+    if ((uint16_t)(max_val - min_val) < MINIMUM_LINE_RANGE) {
+        return 0.0;
+    }
+
+    // Dynamic threshold halfway between min/max
+    uint16_t threshold = (min_val + max_val) / 2;
+
+    // --- 2. Compute weighted center of bright region ---
+    int64_t weighted_sum = 0;
+    int64_t weight_total = 0;
+
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        uint16_t v = sensorValues[i];
+        if (v > threshold) {
+            weighted_sum += (int64_t)i * (int64_t)v;
+            weight_total += v;
+        }
+    }
+
+    if (weight_total == 0) {
+        return 0.0;   // nothing detected
+    }
+
+    double center = (double)weighted_sum / (double)weight_total;
+
+    // --- 3. Normalize center to range [-1, +1] ---
+    double mid = (NUM_PIXELS - 1) / 2.0;      // 63.5 for 128 pixels
+    double half_range = mid;                  // also 63.5
+
+    double error = (mid - center) / half_range;
+
+    // Clamp for safety (floating-point rounding)
+    if (error > 1.0)  error = 1.0;
+    if (error < -1.0) error = -1.0;
+
+    return error;
+}
+*/
+
 int32_t LineSensor_Calculate_Error(uint16_t *sensorValues)
 {
     // --- 1. Find Min/Max to get dynamic threshold ---
