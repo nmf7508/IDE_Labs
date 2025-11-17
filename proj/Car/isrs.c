@@ -26,16 +26,12 @@ volatile uint8_t cameraData_complete = 0;
 volatile int pixelCounter = 0;
 uint16_t cameraData[128];
 volatile int delayOver = 0;
-static int integrationTime = 0;
 
 // --- Global Flags for Car Control ---
 volatile bool g_car_running = false;
 volatile bool g_debug_mode = false;
 volatile double g_Steer_Correction = 0.0; // Steering: -1.0 (L) to 1.0 (R)
 volatile int16_t g_Drive_Speed = 30;     // Drive speed: -50 to 50
-volatile uint32_t g_integration_time = 75;
-
-static bool read;
  
  /**
  * @brief Handles GPIOA interrupts (S1 - PA18).
@@ -64,30 +60,21 @@ void GROUP1_IRQHandler(void) {
  * -------------------------------------------------------------------------- */
 void TIMG0_IRQHandler(void) {
     TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
-	
 		
 		// Toggle GPIO pin for CLK output
     GPIOA->DOUTSET31_0 |= (1 << 12);
-			
-    if (pixelCounter == 0) { // First clock edge after SI
-        GPIOA->DOUTCLR31_0 |= (1 << 28); // Pull SI low
-    }
+	
+		GPIOA->DOUTCLR31_0 |= (1 << 12);
 
-
-    //if (read) {
-        pixelCounter++;
-        if (pixelCounter > 18 && pixelCounter <= (18 + 128)) {
-            cameraData[pixelCounter - 19] = (uint16_t)ADC0_getVal();
-        }
-        if (pixelCounter >= (18 + 128)) {
-            cameraData_complete = 1;
-            pixelCounter = 0;
-					  integrationTime = 0;
-            TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED; // Stop CLK
-        }
-				GPIOA->DOUTCLR31_0 |= (1 << 12);
-    //}
-    //read = !read;
+		pixelCounter++;
+		cameraData[pixelCounter] = (uint16_t)ADC0_getVal();
+	
+		if (pixelCounter == 128) {
+				cameraData_complete = 1;
+				pixelCounter = 0;
+				TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED; // Stop CLK
+		}
+		
 	}
 
 
@@ -97,12 +84,20 @@ void TIMG0_IRQHandler(void) {
 void TIMG6_IRQHandler(void) {
     TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 
-    if (!cameraData_complete) {
-        GPIOA->DOUTSET31_0 = (1 << 28);   // SI high
-        pixelCounter = 0;               // Reset counter
-        TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED; // Enable CLK
-    }
-    read = 1;
+		cameraData_complete = 0;
+		pixelCounter = 0;               // Reset counter
+		GPIOA->DOUTSET31_0 = (1 << 28);   // SI high
+		
+		GPIOA->DOUTSET31_0 |= (1 << 12);
+		
+		GPIOA->DOUTCLR31_0 |= (1 << 28); // Pull SI low
+		
+		GPIOA->DOUTCLR31_0 |= (1 << 12); // CLK low
+		
+
+		TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED; // Enable CLK
+		
+		
 }
 
 

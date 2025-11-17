@@ -68,7 +68,7 @@
 	/**
 	 * @brief Initialize the Start Integration (SI) signal on PA28.
 	 * @details
-	 *   Configures TIMG6 to control integration timing ? the time between 
+	 *   Configures TIMG6 to control integration timing the time between 
 	 *   successive image captures. Each SI pulse begins a new line capture by 
 	 *   resetting the pixel counter and enabling the CLK signal.
 	 *
@@ -77,7 +77,7 @@
 	 */
 	void init_SI(void) {
 			// Initialize Timer6 with a period and duty cycle for integration timing
-			TIMG6_init(100, 255);
+			TIMG6_init(60149, 3);
 
 			// Enable and configure GPIOA peripheral if not already active
 			if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
@@ -111,8 +111,8 @@
 			pixelCounter = 0;        // Reset pixel index counter
 
 			// Ensure CLK is disabled until first SI pulse starts capture
-			TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;
-			TIMG6->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+			//TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;
+			//TIMG6->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 	}
 
 

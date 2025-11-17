@@ -10,7 +10,7 @@
 function plot_cameras_serial
     
     % --- Serial Port Configuration ---
-    serialPort = "COM3"; % !! Make sure this is your correct COM port
+    serialPort = "COM4"; % !! Make sure this is your correct COM port
     serialBaudrate = 9600; % !! MUST match your C code's UART0 baud rate
     
     trace = zeros(1, 128);  % Stored Values for Raw Input

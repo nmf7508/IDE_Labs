@@ -29,9 +29,9 @@
 #include "uart_extras.h" // For UART0_printDec()
 
 // --- Unused Modules (commented out) ---
-// #include "i2c.h"
+#include "i2c.h"
 // #include "motor.h"
- #include "oled.h"
+#include "oled.h"
 // #include "servo.h"
 // #include "switches.h"
 
@@ -45,15 +45,8 @@ int main(void) {
     // Initialize required peripherals for camera test
     ADC0_init();     // Camera needs the ADC
     UART0_init();    // For sending data to PC
-    LED1_init();     // For a visual "heartbeat"
     Camera_init();   // Initializes TIMG0 (CLK) and TIMG6 (SI)
 	  OLED_Init();
-
-    // Set initial states
-    LED1_set(LED1_OFF);
-    
-    // Send a ready message to the serial plotter
-    UART0_put((uint8_t*)"Camera test ready...\r\n");
 
     // Enable all interrupts (CRITICAL for camera ISR)
     __enable_irq();
@@ -61,9 +54,6 @@ int main(void) {
     while (1) {
         // Wait for the camera data ready flag to be set by ISR
         if (Camera_isDataReady()) {
-            
-            // Toggle LED1 to indicate capture completion (heartbeat)
-            LED1_set(LED1_TOGGLE);
 
             // Retrieve 128-sample buffer
             uint16_t* data = Camera_getData(); 

@@ -16,9 +16,6 @@ extern volatile double g_Steer_Correction; // Steering: -1.0 (L) to 1.0 (R)
 extern volatile int16_t g_Drive_Speed;     // Drive speed: -50 to 50
 extern volatile uint32_t g_integration_time;
 
-// Set MODE to 0 (or any non-3 value) to disable camera interrupts
-#define MODE 0
-
 // -----------------------------------------------------------------------------
 // Function Prototypes
 // -----------------------------------------------------------------------------
