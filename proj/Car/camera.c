@@ -85,7 +85,7 @@
 	 */
 	void init_SI(void) {
 			// Initialize Timer6 with a period and duty cycle for integration timing
-			TIMG6_init(60000, 3);
+			TIMG6_init(40000, 3);
 
 			// Enable and configure GPIOA peripheral if not already active
 			if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
@@ -188,6 +188,7 @@ int32_t LineSensor_Calculate_Error(uint16_t* sensorValues) {
 	return (left > (128-right)) ? -1:1;
 }
 */
+/*
 double LineSensor_Calculate_Error(uint16_t *sensorValues)
 {
     uint32_t left_sum  = 0;
@@ -212,9 +213,59 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
     // Normalize to [-1, 1]
     // left big  -> +1
     // right big -> -1
-    double error = ((double)left_sum - (double)right_sum) / ((double)total/12);
+    double error = ((double)left_sum - (double)right_sum) / ((double)total/20);
 
     // Safety clamp
+    if (error > 1.0)  error = 1.0;
+    if (error < -1.0) error = -1.0;
+
+    return error;
+}*/
+
+double LineSensor_Calculate_Error(uint16_t *sensorValues)
+{
+    uint16_t min_val = 4095;
+    uint16_t max_val = 0;
+
+    // --- 1. Get min/max ---
+    for (int i = 0; i < 128; i++) {
+        uint16_t v = sensorValues[i];
+        if (v < min_val) min_val = v;
+        if (v > max_val) max_val = v;
+    }
+
+    // --- 2. Detect CARPET STOP ---
+    // Conditions for carpet:
+    //  - Very low contrast (no bright line)
+    //  - Overall dark (carpet is black)
+    if ((max_val - min_val) < 1000 && max_val < 2000) {
+        // return special STOP signal
+        return 2.0;
+    }
+
+    // --- 3. Normal left/right logic (half-sum method) ---
+    uint32_t left_sum  = 0;
+    uint32_t right_sum = 0;
+
+    for (int i = 0; i < 64; i++)
+        left_sum += sensorValues[i];
+
+    for (int i = 64; i < 128; i++)
+        right_sum += sensorValues[i];
+
+    uint32_t total = left_sum + right_sum;
+    if (total == 0)
+        return 0.0;  // weird case, treat as centered
+
+    double error = ((double)left_sum - (double)right_sum) / ((double)total/30);
+		UART1_printDec(total/128);
+		if (3100>(total/128)) {
+			return 2;
+		}
+		if (3950<(total/128)) {
+			return 0;
+		}
+    // Clamp to [-1, 1]
     if (error > 1.0)  error = 1.0;
     if (error < -1.0) error = -1.0;
 

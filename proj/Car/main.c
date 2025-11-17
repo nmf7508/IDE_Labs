@@ -47,7 +47,7 @@ int main(void) {
     while (!g_car_running) {
         __asm("nop"); // Wait for S1 press or 'g' command
     }
-		Motor_Set_Speed(25, 25);
+		Motor_Set_Speed(35, 35);
     OLED_display_clear();
     OLED_Print(1, 1, "RUNNING!");
 		
@@ -63,8 +63,12 @@ int main(void) {
             // 2. Always show camera data on OLED
 						OLED_DisplayCameraData(line_data);
 						double valk = LineSensor_Calculate_Error(line_data);
+						//UART1_printFloat(valk);
+						if (valk <= 1) {
+							//Motor_Set_Speed(25, 25);
 						SteeringServo_Set_Turn(valk);
-						UART1_printFloat(valk);
+						}
+						else (Motor_Stop());
 						
 				}
 			}
