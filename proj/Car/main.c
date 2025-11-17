@@ -31,7 +31,7 @@
 // --- Unused Modules (commented out) ---
 // #include "i2c.h"
 // #include "motor.h"
-// #include "oled.h"
+ #include "oled.h"
 // #include "servo.h"
 // #include "switches.h"
 
@@ -47,6 +47,7 @@ int main(void) {
     UART0_init();    // For sending data to PC
     LED1_init();     // For a visual "heartbeat"
     Camera_init();   // Initializes TIMG0 (CLK) and TIMG6 (SI)
+	  OLED_Init();
 
     // Set initial states
     LED1_set(LED1_OFF);
@@ -66,6 +67,8 @@ int main(void) {
 
             // Retrieve 128-sample buffer
             uint16_t* data = Camera_getData(); 
+					
+					  OLED_DisplayCameraData(data);
 
             // --- Send Start-of-Frame Marker ---
             UART0_put((uint8_t*)"-1\r\n"); 
@@ -77,7 +80,7 @@ int main(void) {
             }
 
             // --- Send End-of-Frame Marker ---
-            UART0_put((uint8_t*)"-2\r\n"); 
+            UART0_put((uint8_t*)"-2\r\n");
         }
     }
 }

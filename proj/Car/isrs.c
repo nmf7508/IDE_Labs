@@ -26,6 +26,7 @@ volatile uint8_t cameraData_complete = 0;
 volatile int pixelCounter = 0;
 uint16_t cameraData[128];
 volatile int delayOver = 0;
+static int integrationTime = 0;
 
 // --- Global Flags for Car Control ---
 volatile bool g_car_running = false;
@@ -64,14 +65,16 @@ void GROUP1_IRQHandler(void) {
 void TIMG0_IRQHandler(void) {
     TIMG0->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 	
-    // Toggle GPIO pin for CLK output
-    GPIOA->DOUTTGL31_0 |= (1 << 12);
-
-    if (pixelCounter == 1) { // First clock edge after SI
+		
+		// Toggle GPIO pin for CLK output
+    GPIOA->DOUTSET31_0 |= (1 << 12);
+			
+    if (pixelCounter == 0) { // First clock edge after SI
         GPIOA->DOUTCLR31_0 |= (1 << 28); // Pull SI low
     }
 
-    if (read) {
+
+    //if (read) {
         pixelCounter++;
         if (pixelCounter > 18 && pixelCounter <= (18 + 128)) {
             cameraData[pixelCounter - 19] = (uint16_t)ADC0_getVal();
@@ -79,11 +82,13 @@ void TIMG0_IRQHandler(void) {
         if (pixelCounter >= (18 + 128)) {
             cameraData_complete = 1;
             pixelCounter = 0;
+					  integrationTime = 0;
             TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED; // Stop CLK
         }
-    }
-    read = !read;
-}
+				GPIOA->DOUTCLR31_0 |= (1 << 12);
+    //}
+    //read = !read;
+	}
 
 
 /* --------------------------------------------------------------------------

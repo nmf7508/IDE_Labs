@@ -77,7 +77,7 @@
 	 */
 	void init_SI(void) {
 			// Initialize Timer6 with a period and duty cycle for integration timing
-			TIMG6_init(3000, 255);
+			TIMG6_init(100, 255);
 
 			// Enable and configure GPIOA peripheral if not already active
 			if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
