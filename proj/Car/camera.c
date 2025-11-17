@@ -109,10 +109,6 @@
 			init_SI();
 			cameraData_complete = 0; // Reset data-ready flag
 			pixelCounter = 0;        // Reset pixel index counter
-
-			// Ensure CLK is disabled until first SI pulse starts capture
-			//TIMG0->COUNTERREGS.CTRCTL &= ~GPTIMER_CTRCTL_EN_ENABLED;
-			//TIMG6->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 	}
 
 

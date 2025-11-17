@@ -409,16 +409,6 @@
               <FilePath>.\isrs.h</FilePath>
             </File>
             <File>
-              <FileName>LineSensor.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\LineSensor.c</FilePath>
-            </File>
-            <File>
-              <FileName>LineSensor.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\LineSensor.h</FilePath>
-            </File>
-            <File>
               <FileName>adc12.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\adc12.c</FilePath>

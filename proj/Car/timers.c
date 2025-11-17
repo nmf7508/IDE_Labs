@@ -30,7 +30,7 @@
 #include "isrs.h"
 
 // ============================================================================
-// TIMG0 ? Camera Clock / Delay Timer Initialization
+// TIMG0 Camera Clock / Delay Timer Initialization
 // ============================================================================
 /**
  * @brief Initializes Timer G0 as a general-purpose countdown timer.
@@ -86,17 +86,12 @@ void TIMG0_init(uint32_t period, uint32_t prescaler) {
 }
 
 // ============================================================================
-// TIMG6 ? General Purpose Periodic Timer (ADC / LED / SI Pulse)
+// TIMG6 General Purpose Periodic Timer (SI Pulse)
 // ============================================================================
 /**
  * @brief Initializes Timer G6 for periodic interrupts and timing.
  * @param period     Load value defining timer interval.
  * @param prescaler  Prescaler value dividing input clock.
- * @details
- *   Provides general-purpose timing functionality used for:
- *   - Periodic ADC sampling (MODE 1)
- *   - Temperature sensor conversion (MODE 2)
- *   - Camera SI pulse generation (MODE 3)
  */
 void TIMG6_init(uint32_t period, uint32_t prescaler) {
     // Ensure TIMG6 is powered and reset properly
@@ -144,13 +139,11 @@ void TIMG6_init(uint32_t period, uint32_t prescaler) {
 }
 
 // ============================================================================
-// TIMG12 ? Stopwatch / Timekeeping Timer Initialization
+// TIMG12 Stopwatch / Timekeeping Timer Initialization
 // ============================================================================
 /**
  * @brief Initializes Timer G12 for high-frequency timing.
  * @param period  Timer load value (counts down before interrupt).
- * @details
- *   Used in **MODE 0** for stopwatch timing and LED pattern display.
  */
 void TIMG12_init(uint32_t period) {
     // Ensure TIMG12 is powered and reset properly
@@ -194,7 +187,7 @@ void TIMG12_init(uint32_t period) {
 }
 
 // ============================================================================
-// TIMA0 ? PWM Generator (Channels 0?3: PB8, PB12, PB17, PB13)
+// TIMA0 PWM Generator (Channels 0?3: PB8, PB12, PB17, PB13)
 // ============================================================================
 /**
  * @brief Initializes Timer A0 for PWM signal generation.
@@ -276,7 +269,7 @@ void TIMA0_PWM_init(uint8_t pin, uint32_t period, uint32_t prescaler, double per
 }
 
 // ============================================================================
-// TIMA1 ? PWM Generator (Channel 0: PB4)
+// TIMA1 PWM Generator (Channel 0: PB4)
 // ============================================================================
 /**
  * @brief Initializes Timer A1 PWM output.

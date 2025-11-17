@@ -23,6 +23,6 @@ void Motor_Stop(void);
  * Positive is forward, negative is reverse.
  * @note This function enforces the 50% maximum duty cycle.
  */
-void Motor_Set_Speed(int16_t speed);
+void Motor_Set_Speed(int16_t left_speed, int16_t right_speed);
 
 #endif /* MOTOR_H_ */

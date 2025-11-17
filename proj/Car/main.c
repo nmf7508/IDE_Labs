@@ -1,76 +1,66 @@
 /**
- * ******************************************************************************
- * @file     main.c
- * @brief    Minimal main program to ONLY test the camera.
- * @details
- * This program initializes the ADC, UART0, and the Camera.
- * It does not initialize the motors, servo, OLED, or switches.
- *
- * The main loop waits for the camera data-ready flag, streams all
- * 128 pixels over UART0, and toggles LED1.
- * ******************************************************************************
+ * @file    main.c
+ * @brief   Main application file for CMPE460 Car Project
+ * @authors Nick Fair, Nathan Winiarski
+ * @date    November 2025
  */
 
 #include <ti/devices/msp/msp.h>
 #include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-// --- Core and Camera Includes ---
-#include "adc12.h"
-#include "camera.h"
-#include "timers.h"
-#include "sysctl.h"
-#include "isrs.h" // Still needed for the cameraData_complete flag
-
-// --- Debugging Includes ---
+#include "motor.h"
+#include "servo.h"
+#include "LineSensor.h"
+#include "camera.h"   
+#include "adc12.h"    
+#include "oled.h" 
+#include "switches.h" 
+#include "isrs.h"          
+#include "uart.h"     
 #include "leds.h"
-#include "uart.h"
-#include "uart_extras.h" // For UART0_printDec()
-
-// --- Unused Modules (commented out) ---
-#include "i2c.h"
-// #include "motor.h"
-#include "oled.h"
-// #include "servo.h"
-// #include "switches.h"
 
 
-// ============================================================================
-// === 4. MAIN FUNCTION
-// ============================================================================
+extern volatile bool g_car_running;
 
 int main(void) {
-    
-    // Initialize required peripherals for camera test
-    ADC0_init();     // Camera needs the ADC
-    UART0_init();    // For sending data to PC
-    Camera_init();   // Initializes TIMG0 (CLK) and TIMG6 (SI)
-	  OLED_Init();
+    // --- 1. INITIALIZATION ---
+    __disable_irq();
 
-    // Enable all interrupts (CRITICAL for camera ISR)
+    S1_init_interrupt(); // For starting the car
+    S2_init_interrupt(); // For toggling debug mode
+    LED2_init();         // For RGB status LED
+    Motor_Init();        // Initializes TIMA0 for PWM
+		SteeringServo_Init(); // Init Servo 
+    ADC0_init();         // For the camera
+    Camera_init();       // Needs MODE 3 in isrs.h
+    OLED_Init();         // For debugging
+    UART1_init();        // For Bluetooth
+    UART1_init_interrupt(); // For Bluetooth commands
+
     __enable_irq();
-    
-    while (1) {
-        // Wait for the camera data ready flag to be set by ISR
-        if (Camera_isDataReady()) {
 
-            // Retrieve 128-sample buffer
-            uint16_t* data = Camera_getData(); 
-					
-					  OLED_DisplayCameraData(data);
+    OLED_display_clear();
+    OLED_Print(1, 1, "Demo 1");
+    OLED_Print(3, 1, "Press S1 or 'g'");
+    LED2_set(LED2_RED); // Set LED to RED (waiting)
 
-            // --- Send Start-of-Frame Marker ---
-            UART0_put((uint8_t*)"-1\r\n"); 
-
-            // --- Stream pixel data over UART ---
-            for (int i = 0; i < 128; i++) {
-                UART0_printDec(data[i]);      // Print ADC sample
-                UART0_put((uint8_t*)"\r\n");  // Line break
-            }
-
-            // --- Send End-of-Frame Marker ---
-            UART0_put((uint8_t*)"-2\r\n");
-        }
+    while (!g_car_running) {
+        __asm("nop"); // Wait for S1 press or 'g' command
     }
-}
+
+    OLED_display_clear();
+    OLED_Print(1, 1, "RUNNING!");
+
+    // --- 2. MAIN CONTROL LOOP ---
+    while (1) {
+        
+        // Wait for camera to have a new line of data
+        if (Camera_isDataReady()) {
+            
+            // 1. Get Sensor Data
+            uint16_t* line_data = Camera_getData();
+
+            // 2. Always show camera data on OLED
+            OLED_DisplayCameraData(line_data);
+				}
+			}
+		}

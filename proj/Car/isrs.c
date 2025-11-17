@@ -27,11 +27,8 @@ volatile int pixelCounter = 0;
 uint16_t cameraData[128];
 volatile int delayOver = 0;
 
-// --- Global Flags for Car Control ---
 volatile bool g_car_running = false;
-volatile bool g_debug_mode = false;
-volatile double g_Steer_Correction = 0.0; // Steering: -1.0 (L) to 1.0 (R)
-volatile int16_t g_Drive_Speed = 30;     // Drive speed: -50 to 50
+
  
  /**
  * @brief Handles GPIOA interrupts (S1 - PA18).
@@ -41,13 +38,13 @@ void GROUP1_IRQHandler(void) {
 		case 1:
 				GPIOA->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO18_CLR;
         
-				g_car_running = true; // Set the flag for main()
+				g_car_running = true; // start the car running
 
 			break;
 		case 2:
 			GPIOB->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO21_CLR;
 				
-			g_debug_mode = !g_debug_mode; // Toggle the debug flag
+			// any code for S2
 		
 		break;
 		default:
@@ -85,18 +82,17 @@ void TIMG6_IRQHandler(void) {
     TIMG6->CPU_INT.ICLR |= GPTIMER_GEN_EVENT1_ICLR_Z_CLR;
 
 		cameraData_complete = 0;
-		pixelCounter = 0;               // Reset counter
+		pixelCounter = 0;               	// Reset counter
 		GPIOA->DOUTSET31_0 = (1 << 28);   // SI high
 		
-		GPIOA->DOUTSET31_0 |= (1 << 12);
+		GPIOA->DOUTSET31_0 |= (1 << 12); 	// CLK high
 		
-		GPIOA->DOUTCLR31_0 |= (1 << 28); // Pull SI low
+		GPIOA->DOUTCLR31_0 |= (1 << 28); 	// Pull SI low
 		
-		GPIOA->DOUTCLR31_0 |= (1 << 12); // CLK low
+		GPIOA->DOUTCLR31_0 |= (1 << 12); 	// CLK low
 		
 
 		TIMG0->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED; // Enable CLK
-		
 		
 }
 
@@ -117,48 +113,7 @@ void UART1_IRQHandler(void) {
         char cmd = (char)(UART1->RXDATA & UART_RXDATA_DATA_MASK);
 
         switch (cmd) {
-            // --- System Commands ---
-            case 'g': // GO (Start line following)
-                g_car_running = true;
-                Motor_Set_Speed(g_Drive_Speed); // Start motors
-                break;
-            case 's': // STOP (Kill)
-                g_car_running = false;
-                Motor_Stop();
-                break;
-            case 't': // Toggle Debug
-                g_debug_mode = !g_debug_mode;
-                break;
-
-            // --- Manual Drive Commands ---
-            case 'w': // Set drive speed FORWARD
-                g_Drive_Speed = 30;
-                if(g_car_running) Motor_Set_Speed(g_Drive_Speed);
-                break;
-            case 'z': // Set drive speed BACKWARD
-                g_Drive_Speed = -30;
-                if(g_car_running) Motor_Set_Speed(g_Drive_Speed);
-                break;
-            case 'x': // Set drive speed STOP
-                g_Drive_Speed = 0;
-                Motor_Stop();
-                break;
-
-            // --- Manual Steering Commands ---
-            case 'a': // Steer Left
-                g_Steer_Correction -= 0.1;
-                if (g_Steer_Correction < -1.0) g_Steer_Correction = -1.0;
-                SteeringServo_Set_Turn(g_Steer_Correction); // Apply turn
-                break;
-            case 'd': // Steer Right
-                g_Steer_Correction += 0.1;
-                if (g_Steer_Correction > 1.0) g_Steer_Correction = 1.0;
-                SteeringServo_Set_Turn(g_Steer_Correction); // Apply turn
-                break;
-            case 'c': // Center Steer
-                g_Steer_Correction = 0.0;
-                SteeringServo_Set_Turn(g_Steer_Correction); // Apply turn
-                break;
-        }
+					
+				}
     }
 }
