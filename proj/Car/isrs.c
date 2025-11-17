@@ -36,6 +36,7 @@ volatile bool g_car_running = false;
 void GROUP1_IRQHandler(void) {
 	switch(CPUSS->INT_GROUP[1].IIDX) {
 		case 1:
+				UART0_put((uint8_t *)"In gpio isr\r\n");
 				GPIOA->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO18_CLR;
         
 				g_car_running = true; // start the car running

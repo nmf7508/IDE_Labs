@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "motor.h"
 #include "servo.h"
-#include "LineSensor.h"
+//#include "LineSensor.h"
 #include "camera.h"   
 #include "adc12.h"    
 #include "oled.h" 
@@ -17,6 +17,7 @@
 #include "isrs.h"          
 #include "uart.h"     
 #include "leds.h"
+#include "uart_extras.h"
 
 
 extern volatile bool g_car_running;
@@ -25,6 +26,7 @@ int main(void) {
     // --- 1. INITIALIZATION ---
     __disable_irq();
 
+		UART0_init();
     S1_init_interrupt(); // For starting the car
     S2_init_interrupt(); // For toggling debug mode
     LED2_init();         // For RGB status LED
@@ -42,14 +44,13 @@ int main(void) {
     OLED_Print(1, 1, "Demo 1");
     OLED_Print(3, 1, "Press S1 or 'g'");
     LED2_set(LED2_RED); // Set LED to RED (waiting)
-
     while (!g_car_running) {
         __asm("nop"); // Wait for S1 press or 'g' command
     }
-
+		Motor_Set_Speed(30, 30);
     OLED_display_clear();
     OLED_Print(1, 1, "RUNNING!");
-
+		
     // --- 2. MAIN CONTROL LOOP ---
     while (1) {
         
@@ -60,7 +61,11 @@ int main(void) {
             uint16_t* line_data = Camera_getData();
 
             // 2. Always show camera data on OLED
-            OLED_DisplayCameraData(line_data);
+						//OLED_DisplayCameraData(line_data);
+						int32_t valk = LineSensor_Calculate_Error(line_data);
+						SteeringServo_Set_Turn(valk);
+						//UART1_printDec(valk);
+						
 				}
 			}
 		}

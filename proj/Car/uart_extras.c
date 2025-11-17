@@ -40,6 +40,30 @@ void UART0_printDec(int num) {
         if (neg) *(--StringPtr) = '-';
     }
     UART0_put((uint8_t *)StringPtr);
+	}
+		
+void UART1_printDec(int num) {
+    int neg = 0;
+    char String[12];
+    char *StringPtr = &String[11]; // Point to the end of the buffer
+    *StringPtr = '\0'; // Null terminator for the string
+
+    // Handle zero case directly
+    if (num == 0) {
+        *(--StringPtr) = '0';
+    } else {
+        if (num < 0) {
+            neg = 1;
+            num = -num; // Convert to positive value
+        }
+        // Convert number to string
+        while (num > 0) {
+            *(--StringPtr) = (num % 10) + '0';
+            num /= 10;
+        }
+        if (neg) *(--StringPtr) = '-';
+    }
+    UART1_put(StringPtr);
 }
 
 /**

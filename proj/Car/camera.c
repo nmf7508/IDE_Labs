@@ -32,7 +32,17 @@
 	#include "adc12.h"
 	#include "uart.h"
 	#include "isrs.h"
+	#include "uart_extras.h"
+#include <stdint.h>
+#include <stdbool.h>
 
+#define NUM_PIXELS            128
+#define CENTER_DEADBAND_PIXELS  3    // |error| <= 3 pixels = "centered"
+
+// You already have this somewhere, just keep using it:
+#ifndef MINIMUM_LINE_RANGE
+#define MINIMUM_LINE_RANGE    50     // example; tune for your contrast
+#endif
 
 	/**
 	 * @brief Initialize the pixel clock (CLK) output on PA12.
@@ -133,3 +143,118 @@
 			cameraData_complete = 0;   // Clear ready flag after retrieval
 			return (uint16_t*)cameraData;
 	}
+/*
+int32_t LineSensor_Calculate_Error(uint16_t* sensorValues) {
+	
+	// --- 1. Find Min/Max and Calculate Dynamic Threshold ---
+	uint16_t min_val = 4095;
+	uint16_t max_val = 0;
+	
+	for (int i = 0; i < 128; i++) {
+			if (sensorValues[i] < min_val) min_val = sensorValues[i];
+			if (sensorValues[i] > max_val) max_val = sensorValues[i];
+	}
+
+	// Check if we even see a line (is there enough contrast?)
+	if ((max_val - min_val) < MINIMUM_LINE_RANGE) {
+			return 0; // We are "lost" or on a uniform surface, go straight.
+	}
+
+	// Calculate the dynamic threshold
+	uint16_t dynamic_threshold = (min_val + max_val) / 2;
+	int left = -1;
+	int right = -1;
+	// --- 2. Calculate Weighted Average using the new threshold ---
+	for (int i = 0; i < 128; i++) {
+			uint16_t val = sensorValues[i];
+			bool hey = false;
+			// Use the new dynamic threshold
+			if (val > dynamic_threshold) {
+					if (left == -1) {
+						left = i;
+					}
+					hey = true;
+			}
+			else {
+				if (hey) {
+					right = i;
+				}
+				hey = false;
+			}
+	}
+	
+	if ((left - (128-right)) < 5 && (left - (128-right)) > -5) {
+		return 0;
+	}
+
+	return (left > (128-right)) ? -1:1;
+}
+*/
+int32_t LineSensor_Calculate_Error(uint16_t *sensorValues)
+{
+    // --- 1. Find Min/Max to get dynamic threshold ---
+    uint16_t min_val = 4095;
+    uint16_t max_val = 0;
+
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        uint16_t v = sensorValues[i];
+        if (v < min_val) min_val = v;
+        if (v > max_val) max_val = v;
+    }
+
+    // If there isn't enough contrast, assume we lost the line ? "go straight"
+    if ((uint16_t)(max_val - min_val) < MINIMUM_LINE_RANGE) {
+        return 0;
+    }
+
+    // Dynamic threshold: anything above this is considered "line"
+    uint16_t threshold = (uint16_t)((min_val + max_val) / 2);
+
+    // --- 2. Compute center of the bright region (weighted average) ---
+    int64_t weighted_sum = 0;   // sum(i * value)
+    int64_t weight_total = 0;   // sum(value)
+
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        uint16_t v = sensorValues[i];
+
+        // Only use pixels that are "on the line"
+        if (v > threshold) {
+            weighted_sum  += (int64_t)i * (int64_t)v;
+            weight_total  += (int64_t)v;
+        }
+    }
+
+    // If nothing passed the threshold, fall back to "lost"
+    if (weight_total == 0) {
+        return 0;
+    }
+
+    // center * 2  (do it in integer math to avoid float)
+    // center_times_2 = 2 * weighted_sum / weight_total
+    int32_t center_times_2 = (int32_t)((2 * weighted_sum) / weight_total);
+
+    // Middle of sensor array is (NUM_PIXELS - 1) / 2,
+    // so middle*2 = (NUM_PIXELS - 1)
+    int32_t mid_times_2 = (NUM_PIXELS - 1);
+
+    // Error in "half-pixel" units; sign only matters to us
+    int32_t error_times_2 = center_times_2 - mid_times_2;
+
+    // Convert deadband to the same units (half-pixels)
+    int32_t deadband_times_2 = CENTER_DEADBAND_PIXELS * 2;
+
+    // --- 3. Classify: left / center / right ---
+    if (error_times_2 > deadband_times_2) {
+        // Line is to the LEFT side of the array (index < mid)
+        // ? robot is too far right, needs to steer left ? return +1
+        return 1;
+    } else if (error_times_2 < -deadband_times_2) {
+        // Line is to the RIGHT side of the array
+        // ? robot is too far left, needs to steer right ? return -1
+        return -1;
+    } else {
+        // Close enough to the center
+        return 0;
+    }
+}
+
