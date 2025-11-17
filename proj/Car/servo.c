@@ -33,7 +33,7 @@ void SteeringServo_Set_Turn(double correction) {
     double duty_cycle = SERVO_CENTER + (correction * (SERVO_LEFT - SERVO_CENTER));
     
     // Clamp to ensure we don't exceed servo limits
-    duty_cycle = clamp(duty_cycle, SERVO_LEFT, SERVO_RIGHT);
+    duty_cycle = clamp(duty_cycle, SERVO_RIGHT, SERVO_LEFT);
 
     TIMA1_PWM_DutyCycle(0, duty_cycle);
 }

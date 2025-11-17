@@ -62,9 +62,9 @@ int main(void) {
 
             // 2. Always show camera data on OLED
 						OLED_DisplayCameraData(line_data);
-						int valk = LineSensor_Calculate_Error(line_data);
+						double valk = LineSensor_Calculate_Error(line_data);
 						SteeringServo_Set_Turn(valk);
-						UART1_printDec(valk);
+						UART1_printFloat(valk);
 						
 				}
 			}

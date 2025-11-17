@@ -39,7 +39,7 @@ uint8_t Camera_isDataReady(void);
  * @return Pointer to global data array stored locally in this file
 */
 uint16_t* Camera_getData(void);
-int LineSensor_Calculate_Error(uint16_t* sensorValues);
+double LineSensor_Calculate_Error(uint16_t* sensorValues);
 //void TIMG0_IRQHandler(void);
 //void TIMG6_IRQHandler(void);
 void init_CLK(void);
