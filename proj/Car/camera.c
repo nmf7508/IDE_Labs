@@ -222,6 +222,34 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
     return error;
 }*/
 
+double LineSensor_Calculate_Error(int16_t *sensorValues)
+{
+		int left = 0, right = 0;
+
+    // --- 1. Get min/max ---
+    for (int i = 0; i < 64; i++) {
+			if ((sensorValues[64+i] > 5 || sensorValues[64+i] < -5) && !right) {
+				right = 64+i;
+			}
+			if ((sensorValues[64-i] > 5 || sensorValues[64-i] < -5) && !left) {
+				left = 64-i;
+			}
+		}
+		/*UART1_printDec(left);
+		UART1_put(", ");
+		UART1_printDec(right);
+		UART1_put("\r\n");*/
+		if (left > 10) {
+			return (double) (10-left)/ (double) 15;
+		}
+		if (right < 110) {
+			return (double) (110-right) / (double) 15;
+		}
+		return 0;
+    
+}
+
+/*
 double LineSensor_Calculate_Error(uint16_t *sensorValues)
 {
     uint16_t min_val = 4095;
@@ -271,7 +299,7 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
 
     return error;
 }
-
+*/
 /*
 int32_t LineSensor_Calculate_Error(uint16_t *sensorValues)
 {

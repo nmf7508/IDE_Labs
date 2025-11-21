@@ -47,7 +47,7 @@ int main(void) {
     while (!g_car_running) {
         __asm("nop"); // Wait for S1 press or 'g' command
     }
-		Motor_Set_Speed(35, 35);
+		Motor_Set_Speed(25, 25);
     OLED_display_clear();
     OLED_Print(1, 1, "RUNNING!");
 		
@@ -61,14 +61,46 @@ int main(void) {
             uint16_t* line_data = Camera_getData();
 
             // 2. Always show camera data on OLED
+						//uint32_t average = 0;
+						uint16_t line_data_smooth[128];
+						int16_t line_data_diff[128];
 						OLED_DisplayCameraData(line_data);
-						double valk = LineSensor_Calculate_Error(line_data);
+						//for (int i = 0; i < 128; i++) {
+						//	average += line_data[i];
+						//}
+						//average = average/128;
+						//if (average < 3000) {
+						//	Motor_Stop();
+						//}
+						//else if (average < 40001) {
+						for (int i = 1; i < 128 - 1; i++) {
+								line_data_smooth[i] = (line_data[i-1] + line_data[i] + line_data[i+1]) / 3;
+						}
+						line_data_smooth[0] = line_data_smooth[1];
+						line_data_smooth[128-1] = line_data_smooth[128-2];
+
+						for (int i = 1; i < 128 - 1; i++) {
+								line_data_diff[i] =
+										(int16_t)line_data_smooth[i+1] - (int16_t)line_data_smooth[i-1];
+						}
+						line_data_diff[0] = line_data_diff[1];
+						line_data_diff[128-1] = line_data_diff[128-2];
+						//UART0_put("-1\r\n");
+						//for (int i = 0; i < 126; i++) {
+						//	UART0_printDec(line_data_diff[i]);
+						//	UART0_put("\r\n");
+						//}
+						//UART0_put("-2\r\n");
+						
+						double valk = LineSensor_Calculate_Error(line_data_diff);
 						//UART1_printFloat(valk);
-						if (valk <= 1) {
+						//if (valk <= 1) {
 							//Motor_Set_Speed(25, 25);
 						SteeringServo_Set_Turn(valk);
-						}
-						else (Motor_Stop());
+					//}
+						//else SteeringServo_Set_Turn(0);
+						//}
+						//else (Motor_Stop());*/
 						
 				}
 			}
