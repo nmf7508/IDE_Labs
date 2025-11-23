@@ -309,3 +309,47 @@ void OLED_PrintLine(char *str)
     OLED_Print(textIndex + 1, 1, str);
     textIndex = (textIndex + 1) % 4;
 }
+
+void OLED_ShowWave(uint16_t *camera_in_array, double error)
+{
+    int i;
+    int px_height;
+    
+    // 1. Clear the Graph Buffer
+    memset(OLED_GRAPH_ARR, 0, 1024);
+
+    // 2. Draw the Camera Wave (Existing logic)
+    for(i = 0; i < 128; i++)
+    {
+        // Scale 12-bit ADC (0-4095) to Screen Height (0-63)
+        // We use 4095.0 because the MSPM0 ADC is 12-bit.
+        px_height = 64 - (uint16_t) (floor((camera_in_array[i] * 64.0) / 4095.0));
+        
+        // Clamp to ensure we don't go off screen
+        if (px_height > 63) px_height = 63;
+        if (px_height < 0)  px_height = 0;
+
+        // Set the specific bit in the buffer
+        // This maps the X,Y coordinate to the specific byte and bit in the array
+        OLED_GRAPH_ARR[i + (128*(px_height/8))] |= (1 << (px_height%8));
+    }
+
+    // 3. Draw the Steering Line
+    // Map error (-1.0 to 1.0) to screen X (0 to 127). Center is 64.
+    int line_x = 64 + (int)(error * 64.0);
+    
+    // Safety Clamps
+    if (line_x < 0) line_x = 0;
+    if (line_x > 127) line_x = 127;
+
+    // Draw a vertical dotted line at 'line_x'
+    // The screen is divided into 8 "pages" vertically (rows of bytes).
+    // We write the pattern 0x55 (01010101 binary) to create a dotted look.
+    for (int page = 0; page < 8; page++) {
+        // OR equals (|=) ensures we draw OVER the wave, not erase it
+        OLED_GRAPH_ARR[line_x + (128 * page)] |= 0x55; 
+    }
+
+    // 4. Push buffer to screen
+    OLED_write_display(OLED_GRAPH_ARR);
+}

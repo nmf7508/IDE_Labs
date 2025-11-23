@@ -1,107 +1,103 @@
 /**
  * @file    main.c
- * @brief   Main application file for CMPE460 Car Project
- * @authors Nick Fair, Nathan Winiarski
- * @date    November 2025
+ * @brief   VISION DEBUG MODE
+ * @details Visualizes what the camera sees on the OLED screen. 
+ * Motors are DISABLED.
  */
 
 #include <ti/devices/msp/msp.h>
 #include <stdio.h>
+#include <math.h> 
+#include <stdlib.h>
 #include "motor.h"
 #include "servo.h"
-//#include "LineSensor.h"
-#include "camera.h"   
-#include "adc12.h"    
+#include "camera.h"    
+#include "adc12.h"      
 #include "oled.h" 
 #include "switches.h" 
-#include "isrs.h"          
-#include "uart.h"     
+#include "isrs.h"           
+#include "uart.h"       
 #include "leds.h"
 #include "uart_extras.h"
 
+// Tuning for the servo reaction test
+#define KP 1.5 
 
 extern volatile bool g_car_running;
 
 int main(void) {
-    // --- 1. INITIALIZATION ---
+    // --- INITIALIZATION ---
     __disable_irq();
-
-		UART0_init();
-    S1_init_interrupt(); // For starting the car
-    S2_init_interrupt(); // For toggling debug mode
-    LED2_init();         // For RGB status LED
-    Motor_Init();        // Initializes TIMA0 for PWM
-		SteeringServo_Init(); // Init Servo 
-    ADC0_init();         // For the camera
-    Camera_init();       // Needs MODE 3 in isrs.h
-    OLED_Init();         // For debugging
-    UART1_init();        // For Bluetooth
-    UART1_init_interrupt(); // For Bluetooth commands
-
+    UART0_init();
+    S1_init_interrupt(); 
+    S2_init_interrupt(); 
+    LED2_init();         
+    Motor_Init();        
+    SteeringServo_Init(); 
+    ADC0_init();         
+    Camera_init();       
+    OLED_Init();         
+    UART1_init();        
+    UART1_init_interrupt(); 
     __enable_irq();
 
+    // --- SAFETY: KILL MOTORS ---
+    Motor_Stop();
+    Motor_Set_Speed(0, 0);
+
     OLED_display_clear();
-    OLED_Print(1, 1, "Demo 1");
-    OLED_Print(3, 1, "Press S1 or 'g'");
-    LED2_set(LED2_RED); // Set LED to RED (waiting)
-    while (!g_car_running) {
-        __asm("nop"); // Wait for S1 press or 'g' command
-    }
-		Motor_Set_Speed(25, 25);
-    OLED_display_clear();
-    OLED_Print(1, 1, "RUNNING!");
-		
-    // --- 2. MAIN CONTROL LOOP ---
+    OLED_Print(1, 1, "VISION DEBUG");
+    LED2_set(LED2_BLUE);
+
+    // Static buffers
+    static uint16_t line_data_smooth[128];
+    static int16_t line_data_diff[128];
+
     while (1) {
-        
-        // Wait for camera to have a new line of data
         if (Camera_isDataReady()) {
             
-            // 1. Get Sensor Data
             uint16_t* line_data = Camera_getData();
 
-            // 2. Always show camera data on OLED
-						//uint32_t average = 0;
-						uint16_t line_data_smooth[128];
-						int16_t line_data_diff[128];
-						OLED_DisplayCameraData(line_data);
-						//for (int i = 0; i < 128; i++) {
-						//	average += line_data[i];
-						//}
-						//average = average/128;
-						//if (average < 3000) {
-						//	Motor_Stop();
-						//}
-						//else if (average < 40001) {
-						for (int i = 1; i < 128 - 1; i++) {
-								line_data_smooth[i] = (line_data[i-1] + line_data[i] + line_data[i+1]) / 3;
-						}
-						line_data_smooth[0] = line_data_smooth[1];
-						line_data_smooth[128-1] = line_data_smooth[128-2];
+            // 1. Smoothing
+            for (int i = 1; i < 127; i++) {
+                line_data_smooth[i] = (line_data[i-1] + line_data[i] + line_data[i+1]) / 3;
+            }
+            line_data_smooth[0] = line_data_smooth[1]; 
+            line_data_smooth[127] = line_data_smooth[126];
 
-						for (int i = 1; i < 128 - 1; i++) {
-								line_data_diff[i] =
-										(int16_t)line_data_smooth[i+1] - (int16_t)line_data_smooth[i-1];
-						}
-						line_data_diff[0] = line_data_diff[1];
-						line_data_diff[128-1] = line_data_diff[128-2];
-						//UART0_put("-1\r\n");
-						//for (int i = 0; i < 126; i++) {
-						//	UART0_printDec(line_data_diff[i]);
-						//	UART0_put("\r\n");
-						//}
-						//UART0_put("-2\r\n");
-						
-						double valk = LineSensor_Calculate_Error(line_data_diff);
-						//UART1_printFloat(valk);
-						//if (valk <= 1) {
-							//Motor_Set_Speed(25, 25);
-						SteeringServo_Set_Turn(valk);
-					//}
-						//else SteeringServo_Set_Turn(0);
-						//}
-						//else (Motor_Stop());*/
-						
-				}
-			}
-		}
+            // 2. WIDE Edge Detection ("Glasses")
+            // We must use the same math as the race code!
+            for (int i = 3; i < 125; i++) {
+                line_data_diff[i] = (int16_t)line_data_smooth[i+3] - (int16_t)line_data_smooth[i-3];
+            }
+            for(int k=0; k<3; k++) line_data_diff[k] = 0;
+            for(int k=125; k<128; k++) line_data_diff[k] = 0;
+
+            // 3. Calculate Error
+            double raw_error = LineSensor_Calculate_Error(line_data_diff);
+
+            // 4. Move Servo (Visual Feedback)
+            // Allows you to "feel" the steering reaction
+            if (raw_error > -10.0) {
+                 SteeringServo_Set_Turn(-raw_error * KP); 
+                 LED2_set(LED2_GREEN);
+            } else {
+                 SteeringServo_Set_Turn(0); // Center if line lost
+                 LED2_set(LED2_RED);
+            }
+
+            // 5. DRAW TO OLED
+            // We visualize the SMOOTH data because it looks best on the graph.
+            // We pass -raw_error because the OLED draws Left->Right, but our servo logic might be inverted.
+            // If the line moves the wrong way on screen, remove the negative sign.
+            
+            if (raw_error < -10.0) {
+                // Line Lost: Draw wave, set steering line to Center (0)
+                OLED_ShowWave(line_data_smooth, 0.0);
+            } else {
+                // Line Found: Draw wave + Error line
+                OLED_ShowWave(line_data_smooth, -raw_error);
+            }
+        }
+    }
+}

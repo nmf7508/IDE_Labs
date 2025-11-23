@@ -110,6 +110,7 @@ void oled_update_screen(void) ;
 void oled_write_string(char *str, uint8_t x, uint8_t y);
 void OLED_draw_smallfont(int x, int y, unsigned char ascii);
 void OLED_PrintBlock(int startRow, int startCol, char *lines[], int numLines);
+void OLED_ShowWave(uint16_t *data, double error);
 //************************logo_array****************************/
 extern void OLED_display_logos(int x, int y, unsigned char ascii_index);
 
