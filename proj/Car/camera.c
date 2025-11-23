@@ -1,5 +1,3 @@
-// camera.c - OUTERMOST EDGE DETECTION (Robust Version)
-
 #include "camera.h"
 #include <ti/devices/msp/msp.h>
 #include "sysctl.h"
@@ -14,7 +12,7 @@
 #include <math.h>
 
 // Threshold to distinguish line from floor (Adjust 70-120 based on lighting)
-#define THRESHOLD_NOISE 100 
+#define THRESHOLD_NOISE 0 
 
 void init_CLK(void) {
     TIMG0_init(320, 0); 
@@ -63,56 +61,29 @@ uint16_t* Camera_getData(void) {
 /**
  * @brief Finds the OUTERMOST walls to handle Intersections & Ignore Noise
  */
-double LineSensor_Calculate_Error(int16_t *diff_data)
+double LineSensor_Calculate_Error(int16_t *sensorValues)
 {
-    int first_left_idx = -1;
-    int last_right_idx = -1;
+		int left = 0, right = 0;
 
-    // 1. Scan Left->Right for FIRST Rising Edge (Left Wall)
-    // Start at 20 to ignore hardware startup noise (Pedestal)
-    for (int i = 20; i < 120; i++) {
-        if (diff_data[i] > THRESHOLD_NOISE) {
-            first_left_idx = i;
-            break; // Found outermost wall, stop looking
-        }
-    }
-
-    // 2. Scan Right->Left for LAST Falling Edge (Right Wall)
-    // Stop at 20 to ignore hardware noise
-    for (int i = 123; i > 20; i--) {
-        if (diff_data[i] < -THRESHOLD_NOISE) {
-            last_right_idx = i;
-            break; // Found outermost wall, stop looking
-        }
-    }
-
-    // --- CROSSED EYES SAFETY CHECK ---
-    if (first_left_idx != -1 && last_right_idx != -1) {
-        if (first_left_idx > last_right_idx) {
-            // Impossible scenario. Trust the edge closer to the screen border.
-            if (first_left_idx > 64) last_right_idx = -1;
-            else first_left_idx = -1;
-        }
-    }
-
-    // --- ERROR CALCULATION ---
-
-    // CASE 1: Perfect Track
-    if (first_left_idx != -1 && last_right_idx != -1) {
-        double center = (double)(first_left_idx + last_right_idx) / 2.0;
-        return (center - 64.0) / 64.0;
-    }
-
-    // CASE 2: Only Left Wall Visible (Steer Right)
-    if (first_left_idx != -1 && last_right_idx == -1) {
-        return 1.0; // Hard Right
-    }
-
-    // CASE 3: Only Right Wall Visible (Steer Left)
-    if (first_left_idx == -1 && last_right_idx != -1) {
-        return -1.0; // Hard Left
-    }
-
-    // CASE 4: No Walls (Intersection or Lost)
-    return -99.0;
+    // --- 1. Get min/max ---
+    for (int i = 0; i < 64; i++) {
+			if ((sensorValues[64+i] > 5 || sensorValues[64+i] < -5) && !right) {
+				right = 64+i;
+			}
+			if ((sensorValues[64-i] > 5 || sensorValues[64-i] < -5) && !left) {
+				left = 64-i;
+			}
+		}
+		UART1_printDec(left);
+		UART1_put(", ");
+		UART1_printDec(right);
+		UART1_put("\r\n");
+		if (left > 10) {
+			return (double) (10-left)/ (double) 15;
+		}
+		if (right < 110) {
+			return (double) (110-right) / (double) 15;
+		}
+		return 0;
+    
 }

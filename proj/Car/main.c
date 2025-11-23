@@ -58,26 +58,20 @@ int main(void) {
             
             uint16_t* line_data = Camera_getData();
 
-            // 1. Smoothing
             for (int i = 1; i < 127; i++) {
                 line_data_smooth[i] = (line_data[i-1] + line_data[i] + line_data[i+1]) / 3;
             }
             line_data_smooth[0] = line_data_smooth[1]; 
             line_data_smooth[127] = line_data_smooth[126];
 
-            // 2. WIDE Edge Detection ("Glasses")
-            // We must use the same math as the race code!
             for (int i = 3; i < 125; i++) {
                 line_data_diff[i] = (int16_t)line_data_smooth[i+3] - (int16_t)line_data_smooth[i-3];
             }
             for(int k=0; k<3; k++) line_data_diff[k] = 0;
             for(int k=125; k<128; k++) line_data_diff[k] = 0;
 
-            // 3. Calculate Error
             double raw_error = LineSensor_Calculate_Error(line_data_diff);
 
-            // 4. Move Servo (Visual Feedback)
-            // Allows you to "feel" the steering reaction
             if (raw_error > -10.0) {
                  SteeringServo_Set_Turn(-raw_error * KP); 
                  LED2_set(LED2_GREEN);
@@ -85,17 +79,10 @@ int main(void) {
                  SteeringServo_Set_Turn(0); // Center if line lost
                  LED2_set(LED2_RED);
             }
-
-            // 5. DRAW TO OLED
-            // We visualize the SMOOTH data because it looks best on the graph.
-            // We pass -raw_error because the OLED draws Left->Right, but our servo logic might be inverted.
-            // If the line moves the wrong way on screen, remove the negative sign.
             
             if (raw_error < -10.0) {
-                // Line Lost: Draw wave, set steering line to Center (0)
                 OLED_ShowWave(line_data_smooth, 0.0);
             } else {
-                // Line Found: Draw wave + Error line
                 OLED_ShowWave(line_data_smooth, -raw_error);
             }
         }

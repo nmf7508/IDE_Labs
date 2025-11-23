@@ -1874,9 +1874,9 @@
       </Doc>
       <Doc>
         <Name>.\camera.c</Name>
-        <ColumnNumber>0</ColumnNumber>
-        <TopLine>1</TopLine>
-        <CurrentLine>119</CurrentLine>
+        <ColumnNumber>22</ColumnNumber>
+        <TopLine>40</TopLine>
+        <CurrentLine>80</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
         <PaneID>0</PaneID>
@@ -1910,9 +1910,9 @@
       </Doc>
       <Doc>
         <Name>.\main.c</Name>
-        <ColumnNumber>0</ColumnNumber>
-        <TopLine>1</TopLine>
-        <CurrentLine>104</CurrentLine>
+        <ColumnNumber>14</ColumnNumber>
+        <TopLine>4</TopLine>
+        <CurrentLine>31</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
         <PaneID>0</PaneID>
