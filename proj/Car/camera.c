@@ -13,6 +13,7 @@
 
 // Threshold to distinguish line from floor (Adjust 70-120 based on lighting)
 #define THRESHOLD_NOISE 0 
+#define EDGE_THRESH 150
 
 void init_CLK(void) {
     TIMG0_init(320, 0); 
@@ -63,31 +64,44 @@ uint16_t* Camera_getData(void) {
  */
 double LineSensor_Calculate_Error(int16_t *sensorValues)
 {
-		int left = -1, right = -1;
+		int left_idx = -1;
+		int right_idx = -1;
+		int left_val =  0;
+		int right_val = 0;
 
-    // --- 1. Get min/max ---
-    for (int i = 4; i < 128; i++) {
-			if (sensorValues[i] > 100) {
-				left = i;
-			}
-			if (sensorValues[131-i] < -100) {
-				right = i;
-			}
+		for (int i = 10; i < 118; i++) {
+				int d = sensorValues[i];
+
+				if (d < left_val) {          // most negative -> left edge
+						left_val = d;
+						left_idx = i;
+				}
+				if (d > right_val) {         // most positive -> right edge
+						right_val = d;
+						right_idx = i;
+				}
 		}
-		if (left == -1 && right == -1) {
-			return 0;
+		if (abs(left_val)  < EDGE_THRESH)  left_idx  = -1;
+		if (abs(right_val) < EDGE_THRESH)  right_idx = -1;
+				
+		double center;
+		if (left_idx >= 0 && right_idx >= 0) {
+				center = 0.5 * (double)(left_idx + right_idx);
 		}
-		if (left == -1) {
-			return ((double)(right-128) / (double) 25);
+		else if (left_idx >= 0) {
+				center = left_idx + 64.0;
+		} else if (right_idx >= 0) {
+				center = right_idx - 64.0;
+		} else {
+				// no line detected -> use last_center or drive straight/slow
+				center = 64;
 		}
-		if (right == -1) {
-			return ((double)(left) / (double) 25);
-		}
-		return (double) (64 - (right + left)/2) / (double) 20;
-		/*UART1_printDec(left);
-		UART1_put(", ");
-		UART1_printDec(right);
-		UART1_put("\r\n");*
-    */
-	  return 0;
+		//last_center = center;
+		double cam_center = 64;
+		double error_pix = center - cam_center;
+		double max_offset = 54;
+		double error_norm = error_pix / max_offset;   // ~[-1,1]
+		return error_norm;
+
+
 }

@@ -77,7 +77,7 @@ int main(void) {
 						
 						/*UART0_put("-1\r\n");
 						for (int j = 0; j < 128; j++) {
-							UART0_printDec(line_data[j]);
+							UART0_printDec(line_data_diff[j]);
 							UART0_put("\r\n");
 						}
 						UART0_put("-2\r\n");*/
