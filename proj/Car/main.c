@@ -43,7 +43,7 @@ int main(void) {
 
     // --- SAFETY: KILL MOTORS ---
     Motor_Stop();
-    Motor_Set_Speed(0, 0);
+    Motor_Set_Speed(25, 25);
 
     OLED_display_clear();
     OLED_Print(1, 1, "VISION DEBUG");
@@ -64,27 +64,39 @@ int main(void) {
             line_data_smooth[0] = line_data_smooth[1]; 
             line_data_smooth[127] = line_data_smooth[126];
 
-            for (int i = 3; i < 125; i++) {
-                line_data_diff[i] = (int16_t)line_data_smooth[i+3] - (int16_t)line_data_smooth[i-3];
+            for (int i = 1; i < 127; i++) {
+								//if (line_data_smooth[i+1] > line_data_smooth[i-1])
+									line_data_diff[i] = (int16_t)line_data_smooth[i+1] - (int16_t)line_data_smooth[i-1];
+								//else 
+									//line_data_diff[i] = (int16_t)line_data_smooth[i-1] - (int16_t)line_data_smooth[i+1];
             }
-            for(int k=0; k<3; k++) line_data_diff[k] = 0;
-            for(int k=125; k<128; k++) line_data_diff[k] = 0;
+						line_data_diff[0] = line_data_diff[1]; 
+            line_data_diff[127] = line_data_diff[126];
+            //for(int k=0; k<3; k++) line_data_diff[k] = 0;
+            //for(int k=125; k<128; k++) line_data_diff[k] = 0;
+						
+						/*UART0_put("-1\r\n");
+						for (int j = 0; j < 128; j++) {
+							UART0_printDec(line_data[j]);
+							UART0_put("\r\n");
+						}
+						UART0_put("-2\r\n");*/
 
             double raw_error = LineSensor_Calculate_Error(line_data_diff);
 
-            if (raw_error > -10.0) {
-                 SteeringServo_Set_Turn(-raw_error * KP); 
-                 LED2_set(LED2_GREEN);
-            } else {
-                 SteeringServo_Set_Turn(0); // Center if line lost
-                 LED2_set(LED2_RED);
-            }
+            //if (raw_error > -10.0) {
+            SteeringServo_Set_Turn(raw_error); 
+              //   LED2_set(LED2_GREEN);
+            //} else {
+             //    SteeringServo_Set_Turn(0); // Center if line lost
+              //   LED2_set(LED2_RED);
+            //}
             
-            if (raw_error < -10.0) {
-                OLED_ShowWave(line_data_smooth, 0.0);
-            } else {
+            //if (raw_error < -10.0) {
+            //    OLED_ShowWave(line_data_smooth, 0.0);
+            //} else {
                 OLED_ShowWave(line_data_smooth, -raw_error);
-            }
+            //}
         }
     }
 }

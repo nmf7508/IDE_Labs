@@ -63,27 +63,31 @@ uint16_t* Camera_getData(void) {
  */
 double LineSensor_Calculate_Error(int16_t *sensorValues)
 {
-		int left = 0, right = 0;
+		int left = -1, right = -1;
 
     // --- 1. Get min/max ---
-    for (int i = 0; i < 64; i++) {
-			if ((sensorValues[64+i] > 5 || sensorValues[64+i] < -5) && !right) {
-				right = 64+i;
+    for (int i = 4; i < 128; i++) {
+			if (sensorValues[i] > 100) {
+				left = i;
 			}
-			if ((sensorValues[64-i] > 5 || sensorValues[64-i] < -5) && !left) {
-				left = 64-i;
+			if (sensorValues[131-i] < -100) {
+				right = i;
 			}
 		}
-		UART1_printDec(left);
+		if (left == -1 && right == -1) {
+			return 0;
+		}
+		if (left == -1) {
+			return ((double)(right-128) / (double) 25);
+		}
+		if (right == -1) {
+			return ((double)(left) / (double) 25);
+		}
+		return (double) (64 - (right + left)/2) / (double) 20;
+		/*UART1_printDec(left);
 		UART1_put(", ");
 		UART1_printDec(right);
-		UART1_put("\r\n");
-		if (left > 10) {
-			return (double) (10-left)/ (double) 15;
-		}
-		if (right < 110) {
-			return (double) (110-right) / (double) 15;
-		}
-		return 0;
-    
+		UART1_put("\r\n");*
+    */
+	  return 0;
 }

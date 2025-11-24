@@ -1,7 +1,7 @@
 function plot_cameras_serial
     
     % --- CONFIGURATION ---
-    serialPort = "COM4";    % !! CHECK YOUR PORT !!
+    serialPort = "COM3";    % !! CHECK YOUR PORT !!
     serialBaudrate = 9600; % !! MUST MATCH UART0 IN C CODE !!
     
     % --- SETUP PLOT ---
