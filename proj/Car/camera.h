@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 
+
 extern volatile uint8_t cameraData_complete;
 extern volatile int pixelCounter;       // counts CLK edges (including dummy cycles)
 extern uint16_t cameraData[128];            // store 128 pixels
@@ -32,6 +33,7 @@ void Camera_init(void);
  * @return True(1)/False(0) if camera data is ready
 */
 uint8_t Camera_isDataReady(void);
+double PID_Update(double error_norm);
 
 
 /**
@@ -39,7 +41,7 @@ uint8_t Camera_isDataReady(void);
  * @return Pointer to global data array stored locally in this file
 */
 uint16_t* Camera_getData(void);
-double LineSensor_Calculate_Error(int16_t *sensorValues);
+double LineSensor_Calculate_Error(uint16_t *sensorValues);
 //void TIMG0_IRQHandler(void);
 //void TIMG6_IRQHandler(void);
 void init_CLK(void);

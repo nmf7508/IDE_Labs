@@ -8,7 +8,7 @@
  * @note Assumes a 50Hz (20ms) period.
  */
 void SteeringServo_Init(void);
-
+double clamp(double val, double min, double max);
 /**
  * @brief Sets the steering servo to a specific angle.
  *
