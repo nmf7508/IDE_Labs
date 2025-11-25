@@ -54,7 +54,6 @@ int main(void) {
 
     // Static buffers
     static uint16_t line_data_smooth[128];
-    //static int16_t line_data_diff[128];
 
     while (1) {
         if (Camera_isDataReady()) {
@@ -67,12 +66,12 @@ int main(void) {
             line_data_smooth[0] = line_data_smooth[1]; 
             line_data_smooth[127] = line_data_smooth[126];
 						
-						/*UART0_put("-1\r\n");
+						UART0_put("-1\r\n");
 						for (int j = 0; j < 128; j++) {
-							UART0_printDec(line_data_diff[j]);
+							UART0_printDec(line_data[j]);
 							UART0_put("\r\n");
 						}
-						UART0_put("-2\r\n");*/
+						UART0_put("-2\r\n");
 
             double raw_error = LineSensor_Calculate_Error(line_data_smooth);
 						if (raw_error < -1000) {
@@ -88,30 +87,13 @@ int main(void) {
 						//double control = PID_Update(error_norm);   // normalized [-1,1]
 						SteeringServo_Set_Turn(control);
 
-						// 1. Speed based on turning strength
-						double turn_mag = fabs(control);
-						if (turn_mag > 1.0) turn_mag = 1.0;
+						SteeringServo_Set_Turn(raw_error);
+						double clamped_error = clamp(raw_error, -1, 1);
+						double clamped_error_l = clamped_error > -.3 ? 1.0 : clamped_error;
+						double clamped_error_r = clamped_error < .3 ? -1.0 : clamped_error; 
+						Motor_Set_Speed((int16_t)(29.0+(6.0*(clamped_error_l))), (int16_t)(29.0-(6.0*(clamped_error_r))));
 
-						// straightness: 1 when straight, 0 on full turn
-						double straightness = 1.0 - turn_mag;
-
-						// base in [MIN_DUTY, MAX_DUTY]
-						double base = MIN_DUTY + (MAX_DUTY - MIN_DUTY) * straightness;
-
-
-						double turn = TURN_GAIN * control;
-
-						double left_duty  = base + turn;
-						double right_duty = base - turn;
-
-						// Clamp each wheel to [MIN_DUTY, MAX_DUTY]
-						if (left_duty  < MIN_DUTY) left_duty  = MIN_DUTY;
-						if (left_duty  > MAX_DUTY) left_duty  = MAX_DUTY;
-
-						if (right_duty < MIN_DUTY) right_duty = MIN_DUTY;
-						if (right_duty > MAX_DUTY) right_duty = MAX_DUTY;
-
-						Motor_Set_Speed((int16_t)left_duty, (int16_t)right_duty);
+						//Motor_Set_Speed((int16_t)left_duty, (int16_t)right_duty);
               //   LED2_set(LED2_GREEN);
             //} else {
              //    SteeringServo_Set_Turn(0); // Center if line lost

@@ -83,11 +83,11 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
 	if (w_sum > 0.0)
 			center = xw_sum / w_sum;    // “center of mass” in pixel units
 	else
-			center = 64;               // fallback
+			center = 63;               // fallback
 
-	double error_pix  = 64.0 - center;
+	double error_pix  = 63.0 - center;
 	//double max_off    = 54.0;
-	double error_norm = error_pix/2;      // ˜ [-1,1]
+	double error_norm = error_pix/3;      // ˜ [-1,1]
 	//if (error_norm < .30 && error_norm > -.30) {
 	//	return 0;
 	//}
