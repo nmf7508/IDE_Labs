@@ -22,9 +22,9 @@
 
 // Tuning for the servo reaction test
 #define KP 1.5 
-#define MAX_DUTY 35.0
-#define MIN_DUTY 25.0
-#define TURN_GAIN 5.0
+#define MAX_DUTY 50.0
+#define MIN_DUTY 35.0
+#define TURN_GAIN 7.0
 
 extern volatile bool g_car_running;
 
@@ -56,6 +56,7 @@ int main(void) {
     static uint16_t line_data_smooth[128];
 
     while (1) {
+			double last_error = 0;
         if (Camera_isDataReady()) {
             
             uint16_t* line_data = Camera_getData();
@@ -66,32 +67,38 @@ int main(void) {
             line_data_smooth[0] = line_data_smooth[1]; 
             line_data_smooth[127] = line_data_smooth[126];
 						
+						/*
 						UART0_put("-1\r\n");
 						for (int j = 0; j < 128; j++) {
 							UART0_printDec(line_data[j]);
 							UART0_put("\r\n");
 						}
 						UART0_put("-2\r\n");
+						*/
 
             double raw_error = LineSensor_Calculate_Error(line_data_smooth);
-						if (raw_error < -1000) {
+						if ((int)raw_error == -10000) {
 							Motor_Stop();
+						}
+						else if ((int)raw_error == -60000) {
+							raw_error = last_error;
 						}
 						else {
 						//UART0_printFloat(raw_error);
 						//UART0_put("\r\n");
-						//double PID_error = PID_Update(raw_error);
 
             //if (raw_error > -10.0) { 
 						double control = clamp(raw_error, -1, 1);
+						// saving last error incase camera disconnects
+						last_error = control;
 						//double control = PID_Update(error_norm);   // normalized [-1,1]
 						SteeringServo_Set_Turn(control);
 
-						SteeringServo_Set_Turn(raw_error);
+						//SteeringServo_Set_Turn(raw_error);
 						double clamped_error = clamp(raw_error, -1, 1);
 						double clamped_error_l = clamped_error > -.3 ? 1.0 : clamped_error;
 						double clamped_error_r = clamped_error < .3 ? -1.0 : clamped_error; 
-						Motor_Set_Speed((int16_t)(29.0+(6.0*(clamped_error_l))), (int16_t)(29.0-(6.0*(clamped_error_r))));
+						Motor_Set_Speed((int16_t)(MIN_DUTY+(TURN_GAIN*(clamped_error_l))), (int16_t)(MIN_DUTY-(TURN_GAIN*(clamped_error_r))));
 
 						//Motor_Set_Speed((int16_t)left_duty, (int16_t)right_duty);
               //   LED2_set(LED2_GREEN);

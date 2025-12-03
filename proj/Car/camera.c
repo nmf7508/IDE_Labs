@@ -75,11 +75,19 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
 
 	double center;
 	double average = w_sum / 108.0;
-	if (average < 1500) {
+	
+	UART1_printDec((int)average);
+	UART1_put("\r\n");
+	
+	if (average < 1000) {
+		// carpet stopping
 		return -10000;
 	}
-	//UART1_printFloat(average);
-	//UART1_put("\r\n");
+	if (average > 3000) {
+		// camera disconnecting
+		return -60000;
+	}
+
 	if (w_sum > 0.0)
 			center = xw_sum / w_sum;    // “center of mass” in pixel units
 	else
