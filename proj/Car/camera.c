@@ -75,11 +75,11 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
 
 	double center;
 	double average = w_sum / 108.0;
-	
+	/*
 	UART1_printDec((int)average);
 	UART1_put("\r\n");
-	
-	if (average < 1000) {
+	*/
+	if (average < 600) {
 		// carpet stopping
 		return -10000;
 	}
@@ -91,9 +91,8 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
 	if (w_sum > 0.0)
 			center = xw_sum / w_sum;    // “center of mass” in pixel units
 	else
-			center = 63;               // fallback
-
-	double error_pix  = 63.0 - center;
+			center = 64.3;               // fallback
+	double error_pix  = 64.3 - center;
 	//double max_off    = 54.0;
 	double error_norm = error_pix/3;      // ˜ [-1,1]
 	//if (error_norm < .30 && error_norm > -.30) {
@@ -155,9 +154,9 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
 double PID_Update(double error_norm)
 {
     // --- Tuning gains ---
-    const double Kp = 0.8;   // proportional
-    const double Ki = 0.0000;  // integral
-    const double Kd = 0.15;  // derivative
+    const double Kp = .75;   // proportional
+    const double Ki = 0.03;  // integral
+    const double Kd = 0.25;  // derivative
 
     // if your loop runs e.g. 100 Hz => Ts = 0.01
     const double Ts = 0.006;  // seconds per update (adjust to your loop)

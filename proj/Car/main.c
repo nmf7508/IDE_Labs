@@ -1,8 +1,7 @@
 /**
  * @file    main.c
- * @brief   VISION DEBUG MODE
- * @details Visualizes what the camera sees on the OLED screen. 
- * Motors are DISABLED.
+ * @brief   
+ * @details 
  */
 
 #include <ti/devices/msp/msp.h>
@@ -23,8 +22,8 @@
 // Tuning for the servo reaction test
 #define KP 1.5 
 #define MAX_DUTY 50.0
-#define MIN_DUTY 35.0
-#define TURN_GAIN 7.0
+#define MIN_DUTY 45.0
+#define TURN_GAIN 25.0
 
 extern volatile bool g_car_running;
 
@@ -88,16 +87,24 @@ int main(void) {
 						//UART0_put("\r\n");
 
             //if (raw_error > -10.0) { 
-						double control = clamp(raw_error, -1, 1);
+						//double control = clamp(raw_error, -1, 1);
 						// saving last error incase camera disconnects
-						last_error = control;
-						//double control = PID_Update(error_norm);   // normalized [-1,1]
-						SteeringServo_Set_Turn(control);
+						
 
 						//SteeringServo_Set_Turn(raw_error);
-						double clamped_error = clamp(raw_error, -1, 1);
-						double clamped_error_l = clamped_error > -.3 ? 1.0 : clamped_error;
-						double clamped_error_r = clamped_error < .3 ? -1.0 : clamped_error; 
+					  //double clamped_error = clamp(raw_error, -1, 1);
+						double control = PID_Update(raw_error);
+						last_error = control;
+						if (fabs((control-last_error)) > .7) {
+							continue;
+						}
+						
+						   // normalized [-1,1]
+						//UART0_printFloat(control);
+						//UART0_put("\n\r");
+						SteeringServo_Set_Turn(control);
+						double clamped_error_l = control > -.3 ? 0 : control;
+						double clamped_error_r = control < .3 ? 0 : control; 
 						Motor_Set_Speed((int16_t)(MIN_DUTY+(TURN_GAIN*(clamped_error_l))), (int16_t)(MIN_DUTY-(TURN_GAIN*(clamped_error_r))));
 
 						//Motor_Set_Speed((int16_t)left_duty, (int16_t)right_duty);
