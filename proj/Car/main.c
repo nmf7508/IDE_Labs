@@ -19,13 +19,14 @@
 #include "leds.h"
 #include "uart_extras.h"
 
-// Tuning for the servo reaction test
-#define KP 1.5 
-#define MAX_DUTY 50.0
-#define MIN_DUTY 45.0
-#define TURN_GAIN 25.0
 
-extern volatile bool g_car_running;
+#define MAX_DUTY 50.0
+//#define MIN_DUTY 45.0
+//#define TURN_GAIN 35.0
+
+extern volatile int g_car_running;
+extern volatile int selection;
+
 
 int main(void) {
     // --- INITIALIZATION ---
@@ -42,20 +43,43 @@ int main(void) {
     UART1_init();        
     UART1_init_interrupt(); 
     __enable_irq();
+	
+		int speed_array[4] = {35, 40, 45, 50};
+		int last_selection = -1;
 
     // --- SAFETY: KILL MOTORS ---
     Motor_Stop();
     //Motor_Set_Speed(25, 25);
-
+	
+		while(g_car_running == 1024){
+			if(selection != last_selection) {
+				OLED_display_clear();
+				OLED_Print(1, 1, "S1: Start");
+				OLED_Print(2, 1, "S2: Speed");
+			
+				char buf[16];
+				sprintf(buf, "Speed: %d%%", speed_array[selection]);
+				OLED_Print(3, 1, buf);
+				
+				last_selection = selection;
+			}
+			for(int i=0; i<10000; i++) __asm("nop");
+		}
+		
+		// Get the final chosen speed
+    double base_speed = (double)speed_array[selection];
+		// Calculate Turn Gain (10 less than current speed)
+    double turn_gain = base_speed - 10.0;
+		
     OLED_display_clear();
-    OLED_Print(1, 1, "VISION DEBUG");
+    OLED_Print(1, 1, "Running!");
     LED2_set(LED2_BLUE);
 
     // Static buffers
     static uint16_t line_data_smooth[128];
 
+		double last_error = 0;
     while (1) {
-			double last_error = 0;
         if (Camera_isDataReady()) {
             
             uint16_t* line_data = Camera_getData();
@@ -65,6 +89,8 @@ int main(void) {
             }
             line_data_smooth[0] = line_data_smooth[1]; 
             line_data_smooth[127] = line_data_smooth[126];
+						
+						//Motor_Stop();
 						
 						/*
 						UART0_put("-1\r\n");
@@ -95,9 +121,6 @@ int main(void) {
 					  //double clamped_error = clamp(raw_error, -1, 1);
 						double control = PID_Update(raw_error);
 						last_error = control;
-						if (fabs((control-last_error)) > .7) {
-							continue;
-						}
 						
 						   // normalized [-1,1]
 						//UART0_printFloat(control);
@@ -105,7 +128,7 @@ int main(void) {
 						SteeringServo_Set_Turn(control);
 						double clamped_error_l = control > -.3 ? 0 : control;
 						double clamped_error_r = control < .3 ? 0 : control; 
-						Motor_Set_Speed((int16_t)(MIN_DUTY+(TURN_GAIN*(clamped_error_l))), (int16_t)(MIN_DUTY-(TURN_GAIN*(clamped_error_r))));
+						Motor_Set_Speed((int16_t)(base_speed+(turn_gain*(clamped_error_l))), (int16_t)(base_speed-(turn_gain*(clamped_error_r))));
 
 						//Motor_Set_Speed((int16_t)left_duty, (int16_t)right_duty);
               //   LED2_set(LED2_GREEN);

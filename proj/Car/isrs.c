@@ -27,7 +27,8 @@ volatile int pixelCounter = 0;
 uint16_t cameraData[128];
 volatile int delayOver = 0;
 
-volatile bool g_car_running = false;
+volatile int g_car_running = 1024;
+volatile int selection = 0;
 
  
  /**
@@ -36,18 +37,20 @@ volatile bool g_car_running = false;
 void GROUP1_IRQHandler(void) {
 	switch(CPUSS->INT_GROUP[1].IIDX) {
 		case 1:
-				UART0_put((uint8_t *)"In gpio isr\r\n");
 				GPIOA->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO18_CLR;
         
-				g_car_running = true; // start the car running
+				g_car_running = 2183; // start the car running
 
 			break;
 		case 2:
 			GPIOB->CPU_INT.ICLR = GPIO_GEN_EVENT1_ICLR_DIO21_CLR;
-				
-			// any code for S2
+			
+			selection++;
+			if (selection > 3) {
+					selection = 0;
+			}		
 		
-		break;
+			break;
 		default:
 			break;
 	}

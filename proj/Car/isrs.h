@@ -9,7 +9,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-extern volatile bool g_car_running;
+extern volatile int g_car_running;
+extern volatile int selection;
 
 // -----------------------------------------------------------------------------
 // Function Prototypes

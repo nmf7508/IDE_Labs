@@ -34,7 +34,7 @@ void init_CLK(void) {
 
 void init_SI(void) {
     // 6000 = 6ms integration time (approx 166 FPS)
-    TIMG6_init(6000, 3); 
+    TIMG6_init(12000, 3); 
     if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
         GPIOA->GPRCM.RSTCTL = GPIO_RSTCTL_KEY_UNLOCK_W | GPIO_RSTCTL_RESETASSERT_ASSERT;
         GPIOA->GPRCM.RSTCTL &= ~GPIO_RSTCTL_KEY_UNLOCK_W;
@@ -79,20 +79,22 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
 	UART1_printDec((int)average);
 	UART1_put("\r\n");
 	*/
-	if (average < 600) {
+
+	if (average < 800) {
 		// carpet stopping
 		return -10000;
 	}
-	if (average > 3000) {
+	if (average > 3500) {
 		// camera disconnecting
 		return -60000;
 	}
+	
 
 	if (w_sum > 0.0)
 			center = xw_sum / w_sum;    // “center of mass” in pixel units
 	else
-			center = 64.3;               // fallback
-	double error_pix  = 64.3 - center;
+			center = 63;               // fallback
+	double error_pix  = 63 - center;
 	//double max_off    = 54.0;
 	double error_norm = error_pix/3;      // ˜ [-1,1]
 	//if (error_norm < .30 && error_norm > -.30) {
@@ -154,9 +156,9 @@ double LineSensor_Calculate_Error(uint16_t *sensorValues)
 double PID_Update(double error_norm)
 {
     // --- Tuning gains ---
-    const double Kp = .75;   // proportional
-    const double Ki = 0.03;  // integral
-    const double Kd = 0.25;  // derivative
+    const double Kp = 0.75;   // proportional
+    const double Ki = 3.5;  // integral
+    const double Kd = 0.5;  // derivative
 
     // if your loop runs e.g. 100 Hz => Ts = 0.01
     const double Ts = 0.006;  // seconds per update (adjust to your loop)
