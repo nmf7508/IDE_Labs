@@ -1,55 +1,106 @@
+/**
+ * @file    camera.c
+ * @brief   Camera Sensor and PID Implementation
+ * @details Implements the Linescan camera timing logic and the 
+ * weighted average algorithm for line detection.
+ *
+ * @author  Nick Fair
+ * @author  Nathan Winiarski
+ * @date    Fall 2025
+ */
+
 #include "camera.h"
 #include <ti/devices/msp/msp.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <math.h>
+
+/* Local Drivers */
 #include "sysctl.h"
 #include "timers.h"
 #include "adc12.h"
 #include "uart.h"
 #include "isrs.h"
 #include "uart_extras.h"
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <math.h>
 
-// Threshold to distinguish line from floor (Adjust 70-120 based on lighting)
-#define THRESHOLD_NOISE 0 
-#define EDGE_THRESH 150
+/* --- Hardware Configuration Macros --- */
+#define CAM_CLK_PIN_MASK    (1 << 12)   // PA12
+#define CAM_SI_PIN_MASK     (1 << 28)   // PA28
 
-#define MARGIN 10;
- 
+/* --- Image Processing Constants --- */
+#define IGNORE_EDGE_PIXELS  10      // Number of pixels to ignore on left/right
+#define THRESH_CARPET       800     // Min avg intensity (Black/Carpet)
+#define THRESH_DISCONNECT   3500    // Max avg intensity (Glare/Disconnect)
+#define CAM_CENTER_INDEX    63.0    // Optical center of the array
+
+/* --- PID Tuning Constants --- */
+#define KP_GAIN             0.75
+#define KI_GAIN             3.5
+#define KD_GAIN             0.5
+#define PID_SAMPLE_TIME     0.010
+#define INTEGRAL_LIMIT      1.0
+#define OUTPUT_LIMIT        1.0
+
+/* --- Private Globals (PID State) --- */
 static double integral   = 0.0;
 static double prev_error = 0.0;
-void init_CLK(void) {
+
+/* --- Private Helper Functions --- */
+
+/**
+ * @brief Configures Timer G0 for Camera Clock (CLK) generation.
+ * @note  Pin: PA12 (IOMUX_PINCM34)
+ */
+static void init_CLK(void) {
     TIMG0_init(320, 0); 
+    
+    // Power up GPIOA
     if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
         GPIOA->GPRCM.RSTCTL = GPIO_RSTCTL_KEY_UNLOCK_W | GPIO_RSTCTL_RESETASSERT_ASSERT;
         GPIOA->GPRCM.RSTCTL &= ~GPIO_RSTCTL_KEY_UNLOCK_W;
         GPIOA->GPRCM.PWREN = GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE;
         GPIOA->GPRCM.PWREN &= ~GPIO_PWREN_KEY_UNLOCK_W;
     }
+
+    // Configure PA12 as Output
     IOMUX->SECCFG.PINCM[IOMUX_PINCM34] |= (0x80 | 0x01);
     IOMUX->SECCFG.PINCM[IOMUX_PINCM34] &= ~IOMUX_PINCM_INENA_ENABLE;
-    GPIOA->DOESET31_0 |= (1 << 12);
+    
+    GPIOA->DOESET31_0 |= CAM_CLK_PIN_MASK;
 }
 
-void init_SI(void) {
-    // 6000 = 6ms integration time (approx 166 FPS)
-    TIMG6_init(12000, 3); 
+/**
+ * @brief Configures Timer G6 for Camera Start Integration (SI) pulse.
+ * @note  Pin: PA28 (IOMUX_PINCM3)
+ */
+static void init_SI(void) {
+    TIMG6_init(10000, 3); 
+
+    // Power up GPIOA
     if (!(GPIOA->GPRCM.PWREN & GPIO_PWREN_ENABLE_ENABLE)) {
         GPIOA->GPRCM.RSTCTL = GPIO_RSTCTL_KEY_UNLOCK_W | GPIO_RSTCTL_RESETASSERT_ASSERT;
         GPIOA->GPRCM.RSTCTL &= ~GPIO_RSTCTL_KEY_UNLOCK_W;
         GPIOA->GPRCM.PWREN = GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE;
         GPIOA->GPRCM.PWREN &= ~GPIO_PWREN_KEY_UNLOCK_W;
     }
+
+    // Configure PA28 as Output
     IOMUX->SECCFG.PINCM[IOMUX_PINCM3] |= (0x80 | 0x01);
     IOMUX->SECCFG.PINCM[IOMUX_PINCM3] &= ~IOMUX_PINCM_INENA_ENABLE;
+    
+    // Enable Timer and set Output Enable
     TIMG6->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
-    GPIOA->DOESET31_0 |= (1 << 28);
+    GPIOA->DOESET31_0 |= CAM_SI_PIN_MASK;
 }
+
+/* --- Function Implementations --- */
 
 void Camera_init(void) {
     init_CLK();
     init_SI();
+    
+    // Reset Globals defined in isrs.h/c
     cameraData_complete = 0; 
     pixelCounter = 0;        
 }
@@ -62,131 +113,69 @@ uint16_t* Camera_getData(void) {
     cameraData_complete = 0;   
     return (uint16_t*)cameraData;
 }
-double LineSensor_Calculate_Error(uint16_t *sensorValues)
-{
-	double w_sum = 0.0;
-	double xw_sum = 0.0;
 
-	for (int i = 10; i < 118; i++) {
-			double w = sensorValues[i];         // or (max - I[i]) if line is dark on bright floor
-			w_sum  += w;
-			xw_sum += w * i;
-	}
+double LineSensor_Calculate_Error(uint16_t *sensorValues) {
+    double w_sum = 0.0;
+    double xw_sum = 0.0;
+    
+    // Loop through active pixels
+    // Range: 10 to 117
+    for (int i = IGNORE_EDGE_PIXELS; i < (128 - IGNORE_EDGE_PIXELS); i++) {
+        double w = sensorValues[i];
+        w_sum  += w;
+        xw_sum += w * i;
+    }
 
-	double center;
-	double average = w_sum / 108.0;
-	/*
-	UART1_printDec((int)average);
-	UART1_put("\r\n");
-	*/
+    double average = w_sum / 108.0;
 
-	if (average < 800) {
-		// carpet stopping
-		return -10000;
-	}
-	if (average > 3500) {
-		// camera disconnecting
-		return -60000;
-	}
-	
+    // Check for Carpet
+    if (average < THRESH_CARPET) {
+        return LINE_NOT_FOUND;
+    }
+    // Check for Disconnect
+    if (average > THRESH_DISCONNECT) {
+        return LINE_LOST_HISTORY;
+    }
 
-	if (w_sum > 0.0)
-			center = xw_sum / w_sum;    // “center of mass” in pixel units
-	else
-			center = 63;               // fallback
-	double error_pix  = 63 - center;
-	//double max_off    = 54.0;
-	double error_norm = error_pix/3;      // ˜ [-1,1]
-	//if (error_norm < .30 && error_norm > -.30) {
-	//	return 0;
-	//}
-	return error_norm;
+    // Calculate Center of Mass
+    double center;
+    if (w_sum > 0.0) {
+        center = xw_sum / w_sum;
+    } else {
+        center = CAM_CENTER_INDEX;
+    }
+    
+    double error_pix  = CAM_CENTER_INDEX - center;
+    double error_norm = error_pix / 3.0;
+    
+    return error_norm;
 }
 
+double PID_Update(double error_norm) {
+    // Proportional
+    double P = KP_GAIN * error_norm;
 
-///**
-// * @brief Finds the OUTERMOST walls to handle Intersections & Ignore Noise
-// */
-//double LineSensor_Calculate_Error(int16_t *sensorValues)
-//{
-//		int left_idx = -1;
-//		int right_idx = -1;
-//		int left_val =  0;
-//		int right_val = 0;
+    // Integral
+    integral += error_norm * PID_SAMPLE_TIME;
+    
+    // Clamping
+    if (integral >  INTEGRAL_LIMIT) integral =  INTEGRAL_LIMIT;
+    if (integral < -INTEGRAL_LIMIT) integral = -INTEGRAL_LIMIT;
+    
+    double I = KI_GAIN * integral;
 
-//		for (int i = 10; i < 118; i++) {
-//				int d = sensorValues[i];
-
-//				if (d < left_val) {          // most negative -> left edge
-//						left_val = d;
-//						left_idx = i;
-//				}
-//				if (d > right_val) {         // most positive -> right edge
-//						right_val = d;
-//						right_idx = i;
-//				}
-//		}
-//		if (abs(left_val)  < EDGE_THRESH)  left_idx  = -1;
-//		if (abs(right_val) < EDGE_THRESH)  right_idx = -1;
-//				
-//		double center;
-//		if (left_idx >= 0 && right_idx >= 0) {
-//				center = 0.5 * (double)(left_idx + right_idx);
-//		}
-//		else if (left_idx >= 0) {
-//				center = left_idx + 64.0;
-//		} else if (right_idx >= 0) {
-//				center = right_idx - 64.0;
-//		} else {
-//				// no line detected -> use last_center or drive straight/slow
-//				center = prev_error;
-//		}
-//		//last_center = center;
-//		double cam_center = 64;
-//		double error_pix = center - cam_center;
-//		double max_offset = 54;
-//		double error_norm = error_pix / max_offset;   // ~[-1,1]
-//		prev_error = error_norm;
-//		return error_norm;
-
-
-//}
-
-// Call this once per camera frame
-double PID_Update(double error_norm)
-{
-    // --- Tuning gains ---
-    const double Kp = 0.75;   // proportional
-    const double Ki = 3.5;  // integral
-    const double Kd = 0.5;  // derivative
-
-    // if your loop runs e.g. 100 Hz => Ts = 0.01
-    const double Ts = 0.006;  // seconds per update (adjust to your loop)
-
-    // --- Persistent state ---
-
-    // --- Proportional ---
-    double P = Kp * error_norm;
-
-    // --- Integral (with simple anti-windup clamp) ---
-    integral += error_norm * Ts;
-    const double INTEGRAL_MAX = 1.0;   // prevent runaway
-    if (integral >  INTEGRAL_MAX) integral =  INTEGRAL_MAX;
-    if (integral < -INTEGRAL_MAX) integral = -INTEGRAL_MAX;
-    double I = Ki * integral;
-
-    // --- Derivative ---
-    double derivative = (error_norm - prev_error) / Ts;
-    double D = Kd * derivative;
+    // Derivative
+    double derivative = (error_norm - prev_error) / PID_SAMPLE_TIME;
+    double D = KD_GAIN * derivative;
+    
     prev_error = error_norm;
 
-    // --- Sum terms ---
+    // Sum terms
     double u = P + I + D;
 
-    // --- Limit output to [-1, 1] for your servo ---
-    if (u >  1.0) u =  1.0;
-    if (u < -1.0) u = -1.0;
+    // Output clamping
+    if (u >  OUTPUT_LIMIT) u =  OUTPUT_LIMIT;
+    if (u < -OUTPUT_LIMIT) u = -OUTPUT_LIMIT;
 
     return u;
 }
-

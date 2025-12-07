@@ -1,39 +1,49 @@
+/**
+ * @file    servo.c
+ * @brief   Servo Motor Driver Implementation
+ * @details Maps PID control values (-1.0 to 1.0) to PWM Duty Cycles.
+ *
+ * @author  Nick Fair
+ * @author  Nathan Winiarski
+ * @date    Fall 2025
+ */
+
 #include "servo.h"
-#include "timers.h" // Use your existing timer driver path
+#include "timers.h" 
 
-// --- Servo Configuration ---
-// 32MHz / 8 (CLKDIV) / 256 (prescaler) = 15625 Hz
-// 15625 Hz / 313 (period) = 50 Hz (20ms)
-#define SERVO_PERIOD 313
-#define SERVO_PRESCALER 255
+/* --- Configuration --- */
+// Timer Settings for 50Hz (20ms period)
+#define SERVO_PERIOD        313
+#define SERVO_PRESCALER     255
 
-// Servo pulse width (duty cycle)
-#define SERVO_LEFT 0.10   // 10% duty cycle
-#define SERVO_CENTER 0.075  // 7.5% duty cycle
-#define SERVO_RIGHT 0.05   // 5% duty cycle
-
-void SteeringServo_Init(void) {
-    TIMA1_PWM_init(0, SERVO_PERIOD, SERVO_PRESCALER, SERVO_CENTER);
-}
+// Duty Cycle Limits
+#define DUTY_MAX_LIMIT      0.10   // 10% Duty Cycle
+#define DUTY_CENTER         0.075  // 7.5% Duty Cycle
+#define DUTY_MIN_LIMIT      0.05   // 5% Duty Cycle
 
 /**
- * @brief Clamps a value to a min/max range.
+ * @brief   Clamps a value to a min/max range.
+ * @note    Static helper, not exposed in header.
  */
-double clamp(double val, double min, double max) {
+static double clamp(double val, double min, double max) {
     if (val < min) return min;
     if (val > max) return max;
     return val;
 }
 
+void SteeringServo_Init(void) {
+    // Initialize TIMA1 Channel 0 with Center Duty Cycle
+    TIMA1_PWM_init(0, SERVO_PERIOD, SERVO_PRESCALER, DUTY_CENTER);
+}
+
 void SteeringServo_Set_Turn(double correction) {
-    // Clamp correction value from -1.0 to +1.0
-    //correction = clamp(correction, -1.0, 1.0);
-
-    // Map the correction value to the servo's duty cycle range
-    double duty_cycle = SERVO_CENTER + (correction * (SERVO_LEFT - SERVO_CENTER));
+    // Calculate target duty cycle based on correction ratio (-1.0 to 1.0)
+    // Formula scales the difference between Center and Max Limit
+    double duty_cycle = DUTY_CENTER + (correction * (DUTY_MAX_LIMIT - DUTY_CENTER));
     
-    // Clamp to ensure we don't exceed servo limits
-    duty_cycle = clamp(duty_cycle, SERVO_RIGHT, SERVO_LEFT);
+    // Clamp to ensure we never send an out-of-bounds signal to the servo
+    duty_cycle = clamp(duty_cycle, DUTY_MIN_LIMIT, DUTY_MAX_LIMIT);
 
+    // Update PWM
     TIMA1_PWM_DutyCycle(0, duty_cycle);
 }
